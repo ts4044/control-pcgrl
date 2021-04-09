@@ -269,29 +269,29 @@ class ParamRew(gym.Wrapper):
 
     def get_reward(self):
         reward = 0
-        for k in self.all_metrics:
-            if k in self.usable_metrics:
-                trg = self.cond_trgs[k]
-            elif k in self.static_trgs:
-                trg = self.static_trgs[k]
-            else:
-                raise Exception("Invalid metric")
-            if not isinstance(trg, tuple):
-                low = trg
-                high = trg
-            else:
-                low, high = trg
-            reward += get_range_reward(self.metrics[k], self.last_metrics[k], low, high) * self.unwrapped._prob._rewards[k]
+       #for k in self.all_metrics:
+       #    if k in self.usable_metrics:
+       #        trg = self.cond_trgs[k]
+       #    elif k in self.static_trgs:
+       #        trg = self.static_trgs[k]
+       #    else:
+       #        raise Exception("Invalid metric")
+       #    if not isinstance(trg, tuple):
+       #        low = trg
+       #        high = trg
+       #    else:
+       #        low, high = trg
+       #    reward += get_range_reward(self.metrics[k], self.last_metrics[k], low, high) * self.unwrapped._prob._rewards[k]
 #       print(self.metrics)
 #       print(reward)
-        return reward
+       #return reward
 #           reward = loss
-#       loss = self.get_loss()
-#       return loss
-#       reward = loss - self.last_loss
-#       self.last_loss = loss
+        loss = self.get_loss()
+       #return loss
+        reward = loss - self.last_loss
+        self.last_loss = loss
 
-#       return reward
+        return reward
 
     def get_done(self):
         done = True

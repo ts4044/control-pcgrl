@@ -84,6 +84,12 @@ def get_args():
         type=int,
         default=-1,
         )
+    args.add_argument(
+        '--max_step',
+        help='How many steps in an episode, maximum.',
+        type=int,
+        default=1000,
+        )
 
     # Not for training:
     args.add_argument(

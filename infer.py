@@ -116,6 +116,8 @@ def infer(game, representation, experiment, infer_kwargs, **kwargs):
 #               infer_info['regions'] = regions[-1]
             n_step = 0
             n_trials += 1
+        print(env.envs[0].metrics)
+        print(n_step)
     return infer_info
 
 
@@ -152,7 +154,11 @@ if problem == 'sokobangoal':
 else:
     map_width = 16
 
-max_step = 1000
+if opts.max_step is None:
+    max_step = 1000
+else:
+    max_step = opts.max_step
+
 if conditional:
     cond_metrics = opts.conditionals
 
