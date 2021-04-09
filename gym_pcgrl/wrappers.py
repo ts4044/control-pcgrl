@@ -376,7 +376,7 @@ class CAactionWrapper(gym.Wrapper):
         obs = self.env.reset()
 #       self.pcgrl_env._map = self.env._rep._map
 
-        self.render()
+#       self.render()
 #       obs = self.env.get_one_hot_map()
         
         return obs

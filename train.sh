@@ -22,9 +22,14 @@ conda activate pcgrl
 
 ## NARROW
 
+#python train.py --problem "binarygoal" --representation "narrow"
+#python train.py --problem "binarygoal" --conditionals "regions" --representation "narrow"
+#python train.py --problem "binarygoal" --conditionals "path-length" --representation "narrow"
+#python train.py --problem "binarygoal" --conditionals "regions" "path-length" --representation "narrow"
 
 ## TURTLE
 
+#python train.py --problem "binarygoal" --representation "turtle"
 #python train.py --problem "binarygoal" --conditionals "regions" --representation "turtle"
 #python train.py --problem "binarygoal" --conditionals "path-length" --representation "turtle"
 #python train.py --problem "binarygoal" --conditionals "regions" "path-length" --representation "turtle"
@@ -32,9 +37,16 @@ conda activate pcgrl
 
 ## WIDE
 
+#python train.py --problem "binarygoal" --representation "wide"
+#python train.py --problem "binarygoal" --conditionals "regions" --representation "wide" 
+python train.py --problem "binarygoal" --conditionals "path-length" --representation "wide"
+#python train.py --problem "binarygoal" --conditionals "regions" "path-length" --representation "wide"
 
 ## WIDE - CA
 
+#python train.py --problem "binarygoal" --representation "wide" --ca_action
+#python train.py --problem "binarygoal" --conditionals "regions" --representation "wide" --ca_action
+#python train.py --problem "binarygoal" --conditionals "path-length" --representation "wide" --ca_action
 #python train.py --problem "binarygoal" --conditionals "regions" "path-length" --representation "wide" --ca_action
 
 
@@ -44,6 +56,7 @@ conda activate pcgrl
 
 ## NARROW
 
+#python train.py --problem "zeldagoal" --representation "narrow"
 #python train.py --problem "zeldagoal" --conditionals "enemies" --representation "narrow"
 #python train.py --problem "zeldagoal" --conditionals "path-length" --representation "narrow"
 #python train.py --problem "zeldagoal" --conditionals "enemies" "path-length" --representation "narrow"
@@ -52,6 +65,7 @@ conda activate pcgrl
 
 ## TURTLE
 
+#python train.py --problem "zeldagoal" --representation "turtle"
 #python train.py --problem "zeldagoal" --conditionals "enemies" --representation "turtle"
 #python train.py --problem "zeldagoal" --conditionals "path-length" --representation "turtle"
 #python train.py --problem "zeldagoal" --conditionals "enemies" "path-length" --representation "turtle"
@@ -60,11 +74,12 @@ conda activate pcgrl
 
 ## WIDE
 
+#python train.py --problem "zeldagoal" --representation "wide"
 #python train.py --problem "zeldagoal" --conditionals "player" "key" "door" "enemies" "regions" "nearest-enemy" "path-length" --representation "wide"
 
 ## WIDE - CA
 
-python train.py --problem "zeldagoal" --conditionals "player" "key" "door" "enemies" "regions" "nearest-enemy" "path-length" --representation "wide" --ca_action
+#python train.py --problem "zeldagoal" --conditionals "player" "key" "door" "enemies" "regions" "nearest-enemy" "path-length" --representation "wide" --ca_action
 
 ### SOKOBAN
 
@@ -92,3 +107,4 @@ python train.py --problem "zeldagoal" --conditionals "player" "key" "door" "enem
 #python train.py --problem "sokobangoal" --conditionals "sol-length" --representation "wide" --ca_action
 #python train.py --problem "sokobangoal" --conditionals "crate" "sol-length" --representation "wide" --ca_action
 #python train.py --problem "sokobangoal" --conditionals "player" "crate" "sol-length" --representation "wide" --ca_action
+
