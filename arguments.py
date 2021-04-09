@@ -50,7 +50,7 @@ def get_args():
         '--conditionals',
         nargs='+',
         help='Which game level metrics to use as conditionals for the generator',
-        default=prob_cond_metrics['binary'])
+        default=[])
     args.add_argument(
         '--resume',
         help='Are we resuming from a saved training run?',

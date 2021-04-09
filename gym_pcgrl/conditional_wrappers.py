@@ -5,6 +5,7 @@ from pdb import set_trace as T
 import copy
 import gym
 from opensimplex import OpenSimplex
+from gym_pcgrl.envs.helper import get_range_reward
 import numpy as np
 
 class ParamRew(gym.Wrapper):
@@ -190,6 +191,7 @@ class ParamRew(gym.Wrapper):
         ob = self.observe_metric_trgs(ob)
         self.metrics = self.unwrapped.metrics
         rew = self.get_reward()
+        self.last_metrics = self.metrics
         self.last_metrics = copy.deepcopy(self.metrics)
         self.n_step += 1
 
@@ -266,12 +268,30 @@ class ParamRew(gym.Wrapper):
 
 
     def get_reward(self):
-#           reward = loss
-        loss = self.get_loss()
-        reward = loss - self.last_loss
-        self.last_loss = loss
-
+        reward = 0
+        for k in self.all_metrics:
+            if k in self.usable_metrics:
+                trg = self.cond_trgs[k]
+            elif k in self.static_trgs:
+                trg = self.static_trgs[k]
+            else:
+                raise Exception("Invalid metric")
+            if not isinstance(trg, tuple):
+                low = trg
+                high = trg
+            else:
+                low, high = trg
+            reward += get_range_reward(self.metrics[k], self.last_metrics[k], low, high) * self.unwrapped._prob._rewards[k]
+#       print(self.metrics)
+#       print(reward)
         return reward
+#           reward = loss
+#       loss = self.get_loss()
+#       return loss
+#       reward = loss - self.last_loss
+#       self.last_loss = loss
+
+#       return reward
 
     def get_done(self):
         done = True

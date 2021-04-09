@@ -36,8 +36,8 @@ class MaxStep(gym.Wrapper):
 
          if self.n_step == self.max_step:
              done = True
-         else:
-             done = False
+        #else:
+        #    done = False
 
          return obs, reward, done, info
 
