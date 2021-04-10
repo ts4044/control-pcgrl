@@ -22,6 +22,8 @@ def parse_args():
 
 def parse_pcgrl_args(args):
     opts = args.parse_args()
+    if opts.max_step == -1:
+        max_step = None
     if opts.conditionals == ['ALL']:
         opts.conditionals = all_metrics[opts.problem]
 
