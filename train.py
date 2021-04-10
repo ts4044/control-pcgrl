@@ -176,7 +176,7 @@ else:
     map_width = 16
 
 
-max_step = 1000
+max_step = opts.max_step
 global COND_METRICS
 if conditional:
     experiment = 'conditional'

@@ -1,8 +1,8 @@
-#!/bin/bash
+#!/bin/bash 
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=12
-##SBATCH --gres=gpu:1
+#SBATCH --gres=gpu:1
 #SBATCH --time=120:00:00
 #SBATCH --mem=40GB
 #SBATCH --job-name=pcgrl
@@ -22,10 +22,12 @@ conda activate pcgrl
 
 ## NARROW
 
-#python train.py --problem "binarygoal" --representation "narrow"
+#python train.py --problem "binarygoal" --representation "narrow" --n_cpu 30
 #python train.py --problem "binarygoal" --conditionals "regions" --representation "narrow"
-#python train.py --problem "binarygoal" --conditionals "path-length" --representation "narrow"
+#python train.py --problem "binarygoal" --conditionals "path-length" --representation "narrow" --n_cpu 50
+python train.py --problem "binarygoal" --representation "narrow" --n_cpu 50 --max_step -1
 #python train.py --problem "binarygoal" --conditionals "regions" "path-length" --representation "narrow"
+#python train.py --problem "binarygoal" --conditionals "path-length" --representation "narrow" --n_cpu 50 --max_step -1
 
 ## TURTLE
 
@@ -39,7 +41,7 @@ conda activate pcgrl
 
 #python train.py --problem "binarygoal" --representation "wide"
 #python train.py --problem "binarygoal" --conditionals "regions" --representation "wide" 
-python train.py --problem "binarygoal" --conditionals "path-length" --representation "wide"
+#python train.py --problem "binarygoal" --conditionals "path-length" --representation "wide"
 #python train.py --problem "binarygoal" --conditionals "regions" "path-length" --representation "wide"
 
 ## WIDE - CA
