@@ -189,7 +189,7 @@ else:
         experiment = '_'.join([experiment, 'midepTrgs'])
 if ca_action:
     experiment = '_'.join([experiment, 'CAaction'])
-    max_step = 50
+    max_step = 5
 kwargs = {
     'map_width': map_width,
     'change_percentage': 1,

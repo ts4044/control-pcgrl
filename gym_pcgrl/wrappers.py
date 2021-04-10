@@ -338,7 +338,7 @@ class CAactionWrapper(gym.Wrapper):
         gym.Wrapper.__init__(self, self.env)
         # NOTE: check this insanity out so cool
         self.action_space = self.pcgrl_env.action_space = gym.spaces.MultiDiscrete([self.n_tile_types] * width * height)
-#       self.action_space = self.pcgrl_env.action_space = gym.spaces.Box(low=0, high=1, shape=(self.n_tile_types, width, height))
+#       self.action_space = self.pcgrl_env.action_space = gym.spaces.Box(low=0, high=1, shape=(self.n_tile_types* width* height,))
         self.last_action = None
         self.INFER = kwargs.get('infer')
 
@@ -351,9 +351,9 @@ class CAactionWrapper(gym.Wrapper):
         obs = obs.transpose(1, 2, 0)
         pcgrl_env._rep._map = obs.squeeze(-1)
         obs = self.env.get_one_hot_map()
-        print(obs['map'][:,:,-1:].transpose(1, 2, 0))
+#       print(obs['map'][:,:,-1:].transpose(1, 2, 0))
         self.n_ca_tick += 1
-        if self.n_ca_tick <= 50:  # or (action == self.last_action).all():
+        if self.n_ca_tick <= 50 or (action == self.last_action).all():
             done = False
         else:
             done = True
@@ -376,7 +376,7 @@ class CAactionWrapper(gym.Wrapper):
         obs = self.env.reset()
 #       self.pcgrl_env._map = self.env._rep._map
 
-        self.render()
+#       self.render()
 #       obs = self.env.get_one_hot_map()
         
         return obs

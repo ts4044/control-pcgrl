@@ -2,7 +2,7 @@ from pdb import set_trace as T
 from gym import spaces
 import numpy as np
 from stable_baselines3.common.policies import ActorCriticPolicy, MlpExtractor, ActorCriticCnnPolicy
-from stable_baselines3.common.distributions import MultiCategoricalDistribution, CategoricalDistribution, Distribution
+from stable_baselines3.common.distributions import MultiCategoricalDistribution, CategoricalDistribution, Distribution, StateDependentNoiseDistribution, DiagGaussianDistribution, get_action_dim
 import torch as th
 from torch import nn
 from typing import Any, Dict, List, Optional, Tuple, Type, Union
@@ -174,7 +174,7 @@ class NCA(th.nn.Module):
 
 #@title Minimalistic Neural CA
 class CA_0(th.nn.Module):
-    def __init__(self, observation_space, n_tools=None, hidden_n=96, **kwargs):
+    def __init__(self, observation_space, hidden_n=96, n_tools=None,  **kwargs):
         super().__init__()
         self.n_tools = n_tools
         self.ident = th.tensor([[0.0,0.0,0.0],[0.0,1.0,0.0],[0.0,0.0,0.0]])
@@ -188,7 +188,7 @@ class CA_0(th.nn.Module):
         # it's dumb that we're applying sobel and laplace filters to our ParamRew observation, which is the same acrsss the map, so we add this lil' embedding layer
         self.w1 = th.nn.Conv2d(self.chn*4, hidden_n, 1)
         self.w2 = th.nn.Conv2d(hidden_n, n_tools, 1, bias=False)
-        self.w2.weight.data.zero_()
+#       self.w2.weight.data.zero_()
 
         self.val_shrink = nn.Sequential(
             conv(n_tools, 64, kernel_size=3, stride=2, padding=1, **kwargs),
@@ -208,10 +208,10 @@ class CA_0(th.nn.Module):
             linear(n_flatten, 1)
         )
 
-    def forward(self, x, update_rate=1.0):
+    def forward(self, x, update_rate=0.05):
         x = x.permute(0, 3, 1, 2)
         y = self.perception(x)
-        y = self.w2(th.relu(self.w1(y)))
+        y = th.sigmoid(self.w2(th.relu(self.w1(y))))
         b, c, h, w = y.shape
         # FIXME: should not be calling cuda here :(
         update_mask = (th.rand(b, 1, h, w) < update_rate)
@@ -461,8 +461,8 @@ class NoDenseMultiCategoricalDistribution(MultiCategoricalDistribution):
         return action_logits
 
     def sample(self) -> th.Tensor:
-#       actions = th.stack([dist.sample() for dist in self.distributions], dim=1)
-        actions = th.stack([dist.logits.argmax(dim=1) for dist in self.distributions], dim=1)
+        actions = th.stack([dist.sample() for dist in self.distributions], dim=1)
+#       actions = th.stack([dist.logits.argmax(dim=1) for dist in self.distributions], dim=1)
         return actions
 
 class NoDenseCategoricalDistribution(CategoricalDistribution):
@@ -524,6 +524,10 @@ def make_proba_distribution(
         return NoDenseMultiCategoricalDistribution(action_space.nvec)
     elif isinstance(action_space, gym.spaces.Discrete):
         return NoDenseCategoricalDistribution(action_space.n)
+    if isinstance(action_space, spaces.Box):
+        assert len(action_space.shape) == 1, "Error: the action space must be a vector"
+        cls = StateDependentNoiseDistribution if use_sde else DiagGaussianDistribution
+        return cls(get_action_dim(action_space), **dist_kwargs)
 
 class IdentityActModule(th.nn.Module):
     def __init__(self):
@@ -574,7 +578,7 @@ class CApolicy(ActorCriticCnnPolicy):
         n_tools = kwargs.pop("n_tools")
         features_extractor_kwargs = {'n_tools': n_tools}
        #super(CApolicy, self).__init__(observation_space, action_space, lr_schedule, **kwargs, net_arch=None, features_extractor_class=NCA, features_extractor_kwargs=features_extractor_kwargs)
-        super(CApolicy, self).__init__(observation_space, action_space, lr_schedule, **kwargs, net_arch=None, features_extractor_class=CA_1, features_extractor_kwargs=features_extractor_kwargs)
+        super(CApolicy, self).__init__(observation_space, action_space, lr_schedule, **kwargs, net_arch=None, features_extractor_class=CA_0, features_extractor_kwargs=features_extractor_kwargs)
         # funky for CA type action
         use_sde = False
         dist_kwargs = None
