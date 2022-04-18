@@ -10,8 +10,13 @@ from gym_pcgrl.envs.helper import (
     get_tile_locations,
 )
 from gym_pcgrl.envs.probs.problem import Problem
-from gym_pcgrl.envs.helper import get_range_reward, get_tile_locations, calc_certain_tile, calc_num_regions
-from gym_pcgrl.envs.probs.sokoban.sokoban.engine import State,BFSAgent,AStarAgent
+from gym_pcgrl.envs.helper import (
+    get_range_reward,
+    get_tile_locations,
+    calc_certain_tile,
+    calc_num_regions,
+)
+from gym_pcgrl.envs.probs.sokoban.sokoban.engine import State, BFSAgent, AStarAgent
 
 """
 Generate a fully connected Sokoban(https://en.wikipedia.org/wiki/Sokoban) level that can be solved
@@ -305,11 +310,21 @@ class SokobanProblem(Problem):
                 }
             else:
                 self._graphics = {
-                    "empty": Image.open(os.path.dirname(__file__) + "/sokoban/empty.png").convert('RGBA'),
-                    "solid": Image.open(os.path.dirname(__file__) + "/sokoban/solid.png").convert('RGBA'),
-                    "player": Image.open(os.path.dirname(__file__) + "/sokoban/player.png").convert('RGBA'),
-                    "crate": Image.open(os.path.dirname(__file__) + "/sokoban/crate.png").convert('RGBA'),
-                    "target": Image.open(os.path.dirname(__file__) + "/sokoban/target.png").convert('RGBA')
+                    "empty": Image.open(
+                        os.path.dirname(__file__) + "/sokoban/empty.png"
+                    ).convert("RGBA"),
+                    "solid": Image.open(
+                        os.path.dirname(__file__) + "/sokoban/solid.png"
+                    ).convert("RGBA"),
+                    "player": Image.open(
+                        os.path.dirname(__file__) + "/sokoban/player.png"
+                    ).convert("RGBA"),
+                    "crate": Image.open(
+                        os.path.dirname(__file__) + "/sokoban/crate.png"
+                    ).convert("RGBA"),
+                    "target": Image.open(
+                        os.path.dirname(__file__) + "/sokoban/target.png"
+                    ).convert("RGBA"),
                 }
 
         return super().render(map)

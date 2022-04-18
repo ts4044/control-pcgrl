@@ -17,24 +17,24 @@ import numpy as np
 
 from rl.cross_eval import compile_results
 
-
 with open("configs/rl/batch.yaml", "r") as f:
     batch_config = yaml.safe_load(f)
-batch_config = namedtuple('batch_config', batch_config.keys())(**batch_config)
+batch_config = namedtuple("batch_config", batch_config.keys())(**batch_config)
+
 
 def launch_batch(exp_name, collect_params=False):
     if collect_params:
         settings_list = []
         assert not EVALUATE
-#   if opts.render_levels:
-#       print('Rendering levels')
-#       n_bins = 4
-#       n_maps = 2
+    #   if opts.render_levels:
+    #       print('Rendering levels')
+    #       n_bins = 4
+    #       n_maps = 2
     if LOCAL:
         print("Testing locally.")
         n_maps = 2
         n_bins = 10
-#       n_bins = 4
+    #       n_bins = 4
     else:
         print("Launching batch of experiments on SLURM.")
         n_maps = 50
@@ -43,9 +43,9 @@ def launch_batch(exp_name, collect_params=False):
         default_config = json.load(f)
     print("Loaded default config:\n{}".format(default_config))
 
-#   if LOCAL:
-#       # if running locally, just run a quick test
-#       default_config["n_frames"] = 100000
+    #   if LOCAL:
+    #       # if running locally, just run a quick test
+    #       default_config["n_frames"] = 100000
     i = 0
 
     for prob in batch_config.problems:
@@ -54,31 +54,33 @@ def launch_batch(exp_name, collect_params=False):
         for rep, model in batch_config.representations_models:
             for controls in prob_controls:
 
-#                   if controls != ["NONE"] and change_percentage != 1:
+                #                   if controls != ["NONE"] and change_percentage != 1:
 
-#                       continue
+                #                       continue
 
                 for alp_gmm in batch_config.alp_gmms:
                     for change_percentage in batch_config.change_percentages:
 
-                        if sum(['3D' in name for name in [prob, rep]]) == 1:
-                            print('Dimensions (2D or 3D) of problem and representation do not match. Skipping '
-                                  'experiment.')
+                        if sum(["3D" in name for name in [prob, rep]]) == 1:
+                            print(
+                                "Dimensions (2D or 3D) of problem and representation do not match. Skipping "
+                                "experiment."
+                            )
                             continue
 
                         if alp_gmm and controls == ["NONE", "NONE"]:
                             continue
 
-#                       if (not alp_gmm) and len(controls) < 2 and controls != ["NONE"]:
-#                           # For now we're only looking at uniform-random target-sampling with both control metrics
-#                           continue
+                        #                       if (not alp_gmm) and len(controls) < 2 and controls != ["NONE"]:
+                        #                           # For now we're only looking at uniform-random target-sampling with both control metrics
+                        #                           continue
 
                         # TODO: integrate evaluate with rllib
                         if EVALUATE:
                             py_script_name = "rl/evaluate_ctrl.py"
                             sbatch_name = "rl/eval.sh"
-#                       elif opts.infer:
-#                           py_script_name = "infer_ctrl_sb2.py"
+                        #                       elif opts.infer:
+                        #                           py_script_name = "infer_ctrl_sb2.py"
                         else:
                             py_script_name = "rl/train_ctrl.py"
                             sbatch_name = "rl/train.sh"
@@ -90,15 +92,15 @@ def launch_batch(exp_name, collect_params=False):
                                 # Replace the ``python scriptname --cl_args`` line.
                                 content = re.sub(
                                     "python .* --load_args \d+",
-                                    "python {} --load_args {}".format(py_script_name, i),
+                                    "python {} --load_args {}".format(
+                                        py_script_name, i
+                                    ),
                                     content,
                                 )
 
                                 # Replace the job name.
                                 content = re.sub(
-                                    "rl_runs/pcgrl_\d+", 
-                                    f"rl_runs/pcgrl_{i}", 
-                                    content
+                                    "rl_runs/pcgrl_\d+", f"rl_runs/pcgrl_{i}", content
                                 )
                             with open(sbatch_name, "w") as f:
                                 f.write(content)
@@ -129,20 +131,24 @@ def launch_batch(exp_name, collect_params=False):
                                     "load": True,
                                     "n_maps": n_maps,
                                     "render": False,
-#                                   "render_levels": opts.render_levels,
+                                    #                                   "render_levels": opts.render_levels,
                                     "n_bins": (n_bins,),
                                     "vis_only": opts.vis_only,
                                 }
                             )
                         print("Saving experiment config:\n{}".format(exp_config))
-                        with open("configs/rl/auto/settings_{}.json".format(i), "w") as f:
+                        with open(
+                            "configs/rl/auto/settings_{}.json".format(i), "w"
+                        ) as f:
                             json.dump(exp_config, f, ensure_ascii=False, indent=4)
                         # Launch the experiment. It should load the saved settings
 
                         if collect_params:
                             settings_list.append(exp_config)
                         elif LOCAL:
-                            os.system("python {} --load_args {}".format(py_script_name, i))
+                            os.system(
+                                "python {} --load_args {}".format(py_script_name, i)
+                            )
                         else:
                             os.system("sbatch {}".format(sbatch_name))
                         i += 1
@@ -155,12 +161,12 @@ if __name__ == "__main__":
         description="Launch a batch of experiments/evaluations for (controllable) pcgrl"
     )
 
-#   opts.add_argument(
-#       "-rl",
-#       "--render_levels",
-#       help="",
-#       action="store_true",
-#   )
+    #   opts.add_argument(
+    #       "-rl",
+    #       "--render_levels",
+    #       help="",
+    #       action="store_true",
+    #   )
 
     opts.add_argument(
         "-ex",
@@ -200,8 +206,8 @@ if __name__ == "__main__":
     )
     opts.add_argument(
         "--render",
-        action='store_true',
-        help="Visualize agent taking actions in environment by calling environments render function."
+        action="store_true",
+        help="Visualize agent taking actions in environment by calling environments render function.",
     )
     opts.add_argument(
         "-in",
@@ -223,7 +229,7 @@ if __name__ == "__main__":
         "-ovr",
         "--overwrite",
         action="store_true",
-        help="Overwrite previous experiment with same name."
+        help="Overwrite previous experiment with same name.",
     )
 
     opts = opts.parse_args()

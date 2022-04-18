@@ -1,9 +1,10 @@
-import gi 
+import gi
+
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, GLib
 from pdb import set_trace as TT
 
-#FIXME: sometimes the mere existence of this class will break a multi-env micropolis run
+# FIXME: sometimes the mere existence of this class will break a multi-env micropolis run
 class ParamRewWindow(Gtk.Window):
     def __init__(self, env, metrics, metric_trgs, metric_bounds):
         self.env = env
@@ -11,13 +12,15 @@ class ParamRewWindow(Gtk.Window):
         self.set_border_width(10)
 
         hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        
+
         reset_button = Gtk.Button("reset")
-        reset_button.connect('clicked', lambda item: self.env.reset())
-        hbox.pack_start(reset_button, False, False, 0) 
+        reset_button.connect("clicked", lambda item: self.env.reset())
+        hbox.pack_start(reset_button, False, False, 0)
 
         auto_reset_button = Gtk.CheckButton("auto reset")
-        auto_reset_button.connect('clicked', lambda item: self.env.enable_auto_reset(item))
+        auto_reset_button.connect(
+            "clicked", lambda item: self.env.enable_auto_reset(item)
+        )
         self.env.auto_reset = False
         hbox.pack_start(auto_reset_button, False, False, 0)
 
@@ -35,8 +38,14 @@ class ParamRewWindow(Gtk.Window):
             vbox.pack_start(label, True, True, 0)
             if metric is None:
                 metric = 0
-            ad = Gtk.Adjustment(metric, metric_bounds[k][0], metric_bounds[k][1],
-                                env.param_ranges[k] / 20, env.param_ranges[k] / 10, 0)
+            ad = Gtk.Adjustment(
+                metric,
+                metric_bounds[k][0],
+                metric_bounds[k][1],
+                env.param_ranges[k] / 20,
+                env.param_ranges[k] / 10,
+                0,
+            )
             scale = Gtk.HScale(adjustment=ad)
             scale.set_name(k)
             scale.set_show_fill_level(True)
@@ -49,20 +58,18 @@ class ParamRewWindow(Gtk.Window):
             prog_labels[k] = prog_label
             vbox.pack_start(prog_label, True, True, 0)
             metric_prog = Gtk.ProgressBar()
-#           metric_prog.set_draw_value(True)
+            #           metric_prog.set_draw_value(True)
             prog_bars[k] = metric_prog
             vbox.pack_start(metric_prog, True, True, 10)
-           #bounds = metric_bounds[k]
-           #frac = metrics[k]
-           #metric_prog.set_fraction(frac)
+        # bounds = metric_bounds[k]
+        # frac = metrics[k]
+        # metric_prog.set_fraction(frac)
 
-      
-       #self.timeout_id = GLib.timeout_add(50, self.on_timeout, None)
-       #self.activity_mode = False
+        # self.timeout_id = GLib.timeout_add(50, self.on_timeout, None)
+        # self.activity_mode = False
         self.prog_bars = prog_bars
         self.scales = scales
         self.prog_labels = prog_labels
-
 
     def step(self):
         self.display_metrics()
@@ -123,6 +130,3 @@ class ParamRewWindow(Gtk.Window):
         # As this is a timeout function, return True so that it
         # continues to get called
         return True
-
-
-

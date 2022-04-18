@@ -23,7 +23,8 @@ GENERATIVE_ONLY_CROSS_EVAL = True
 
 with open("configs/evo/batch.yaml", "r") as f:
     batch_config = yaml.safe_load(f)
-batch_config = namedtuple('batch_config', batch_config.keys())(**batch_config)
+batch_config = namedtuple("batch_config", batch_config.keys())(**batch_config)
+
 
 def launch_batch(exp_name, collect_params=False):
     if collect_params:
@@ -51,8 +52,10 @@ def launch_batch(exp_name, collect_params=False):
                     for model in batch_config.models:
 
                         if model == "CNN" and rep == "cellular":
-                            print("Skipping experiments with CNN model and cellular representation, as this would necessitate "
-                                "an explosion of model parameters.")
+                            print(
+                                "Skipping experiments with CNN model and cellular representation, as this would necessitate "
+                                "an explosion of model parameters."
+                            )
 
                             continue
 
@@ -64,8 +67,10 @@ def launch_batch(exp_name, collect_params=False):
                                     # No reason to re-evaluate other than random seeds so this would cause an error
 
                                     if fix_seed and not fix_el:
-                                        print("Skipping experiment with fix_seed=True and fix_elites=False. There is no "
-                                            "point re-evaluating generators (which are deterministic) on the same seeds.")
+                                        print(
+                                            "Skipping experiment with fix_seed=True and fix_elites=False. There is no "
+                                            "point re-evaluating generators (which are deterministic) on the same seeds."
+                                        )
                                         continue
 
                                     for n_steps in batch_config.n_steps_lst:
@@ -74,45 +79,78 @@ def launch_batch(exp_name, collect_params=False):
                                                 continue
 
                                         if "NCA" in model and n_steps <= 5:
-                                            print("Skipping experiments with NCA model and n_steps <= 5.")
+                                            print(
+                                                "Skipping experiments with NCA model and n_steps <= 5."
+                                            )
                                             continue
 
-                                        for n_init_states in batch_config.n_init_states_lst:
-                                            if n_init_states == 0 and not (fix_seed and fix_el):
-                                                print("Skipping experiments with n_init_states=0 and fix_seed=False. The "
-                                                    "hand-made seed cannot be randomized.")
+                                        for (
+                                            n_init_states
+                                        ) in batch_config.n_init_states_lst:
+                                            if n_init_states == 0 and not (
+                                                fix_seed and fix_el
+                                            ):
+                                                print(
+                                                    "Skipping experiments with n_init_states=0 and fix_seed=False. The "
+                                                    "hand-made seed cannot be randomized."
+                                                )
                                                 continue
 
                                             # The hand-made seed is not valid for Decoders (or CPPNs, handled below)
-                                            if n_init_states == 0 and "Decoder" in model:
+                                            if (
+                                                n_init_states == 0
+                                                and "Decoder" in model
+                                            ):
                                                 continue
 
                                             # For the sake of cross-evaluating over model variable alone, do not look at
                                             # experiments treating models with generative capabilities as indirect encodings
-                                            if args.cross_eval and GENERATIVE_ONLY_CROSS_EVAL:
-                                                if n_init_states == 0 and not (model == "CPPN" or model == "Sin2CPPN" or model == "SinCPPN"):
+                                            if (
+                                                args.cross_eval
+                                                and GENERATIVE_ONLY_CROSS_EVAL
+                                            ):
+                                                if n_init_states == 0 and not (
+                                                    model == "CPPN"
+                                                    or model == "Sin2CPPN"
+                                                    or model == "SinCPPN"
+                                                ):
                                                     continue
 
-                                            if model in ["CPPN", "GenCPPN", "GenCPPN2", "CPPNCA", "DirectBinaryEncoding"]:
+                                            if model in [
+                                                "CPPN",
+                                                "GenCPPN",
+                                                "GenCPPN2",
+                                                "CPPNCA",
+                                                "DirectBinaryEncoding",
+                                            ]:
                                                 if algo != "ME":
-                                                    print("Skipping experiments with model {model} and algo {algo}. (requires "
-                                                    "MAP-Elites.)")
+                                                    print(
+                                                        "Skipping experiments with model {model} and algo {algo}. (requires "
+                                                        "MAP-Elites.)"
+                                                    )
                                                     continue
                                             else:
                                                 pass
                                                 # algo = "CMAME"
 
-                                            if 'CPPN' in model:
-                                                if 'Gen' not in model and model != "CPPNCA":
+                                            if "CPPN" in model:
+                                                if (
+                                                    "Gen" not in model
+                                                    and model != "CPPNCA"
+                                                ):
                                                     # We could have more initial states, randomized initial states, and re-evaluated elites with generator-CPPNs
-                                                    if n_init_states != 0 or not fix_seed or not fix_el:
+                                                    if (
+                                                        n_init_states != 0
+                                                        or not fix_seed
+                                                        or not fix_el
+                                                    ):
                                                         continue
 
                                                 if model != "CPPNCA" and n_steps != 1:
                                                     continue
 
                                             # The decoder generates levels in a single pass (from a smaller latent)
-                                            if 'Decoder' in model and n_steps != 1:
+                                            if "Decoder" in model and n_steps != 1:
                                                 continue
 
                                             # Edit the sbatch file to load the correct config file
@@ -127,21 +165,24 @@ def launch_batch(exp_name, collect_params=False):
                                                 # Replace the ``python scriptname --cl_args`` line.
                                                 new_content = re.sub(
                                                     "python evo/evolve.py -la \d+",
-                                                    "python evo/evolve.py -la {}".format(i),
+                                                    "python evo/evolve.py -la {}".format(
+                                                        i
+                                                    ),
                                                     content,
                                                 )
 
                                                 # Replace the job name.
                                                 new_content = re.sub(
-                                                    "evo_runs/evopcg_\d+", 
-                                                    "evo_runs/evopcg_{}".format(i), 
-                                                    new_content
+                                                    "evo_runs/evopcg_\d+",
+                                                    "evo_runs/evopcg_{}".format(i),
+                                                    new_content,
                                                 )
                                             with open(script_name, "w") as f:
                                                 f.write(new_content)
                                             # Write the config file with the desired settings
                                             exp_config = copy.deepcopy(default_config)
-                                            exp_config.update({
+                                            exp_config.update(
+                                                {
                                                     "problem": prob,
                                                     "representation": rep,
                                                     "behavior_characteristics": bc_pair,
@@ -149,14 +190,16 @@ def launch_batch(exp_name, collect_params=False):
                                                     "model": model,
                                                     "fix_elites": fix_el,
                                                     "fix_level_seeds": fix_seed,
-    #                                               "exp_name": exp_name,
+                                                    #                                               "exp_name": exp_name,
                                                     "exp_name": str(exp_id),
                                                     "save_levels": False,
                                                     "n_steps": n_steps,
                                                     "n_init_states": n_init_states,
                                                     "n_generations": 50000,
                                                     "multi_thread": not args.single_thread,
-                                                    "save_interval": 10 if args.local else 100,
+                                                    "save_interval": 10
+                                                    if args.local
+                                                    else 100,
                                                 }
                                             )
                                             if args.render:
@@ -170,9 +213,13 @@ def launch_batch(exp_name, collect_params=False):
 
                                             elif EVALUATE:
                                                 # No real point a mapping that takes only one-step (unless we're debugging latent seeds, in which case just use more steps)
-                                                render_levels = RENDER_LEVELS and n_steps > 1
+                                                render_levels = (
+                                                    RENDER_LEVELS and n_steps > 1
+                                                )
                                                 # ... Also, because this isn't compatible with qdpy at the moment
-                                                render_levels = RENDER_LEVELS and algo != "ME"
+                                                render_levels = (
+                                                    RENDER_LEVELS and algo != "ME"
+                                                )
                                                 exp_config.update(
                                                     {
                                                         "infer": True,
@@ -188,21 +235,33 @@ def launch_batch(exp_name, collect_params=False):
                                                 )
                                             )
                                             with open(
-                                                "configs/evo/auto/settings_{}.json".format(i), "w"
+                                                "configs/evo/auto/settings_{}.json".format(
+                                                    i
+                                                ),
+                                                "w",
                                             ) as f:
                                                 json.dump(
-                                                    exp_config, f, ensure_ascii=False, indent=4
+                                                    exp_config,
+                                                    f,
+                                                    ensure_ascii=False,
+                                                    indent=4,
                                                 )
                                             # Launch the experiment. It should load the saved settings
 
                                             if collect_params:
                                                 settings_list.append(exp_config)
                                             elif LOCAL:
-                                                os.system("python evo/evolve.py -la {}".format(i))
+                                                os.system(
+                                                    "python evo/evolve.py -la {}".format(
+                                                        i
+                                                    )
+                                                )
                                                 # Turned off for mid-training evals
-    #                                           os.system("ray stop")
+                                            #                                           os.system("ray stop")
                                             else:
-                                                os.system("sbatch {}".format(script_name))
+                                                os.system(
+                                                    "sbatch {}".format(script_name)
+                                                )
                                             i += 1
 
     if collect_params:
@@ -277,10 +336,14 @@ if __name__ == "__main__":
     if args.cross_eval:
         compile_results(settings_list, tex=args.tex)
         if not args.tex:
-            print("Produced html at evo_runs/cross_eval_{}.html".format(args.experiment_name))
+            print(
+                "Produced html at evo_runs/cross_eval_{}.html".format(
+                    args.experiment_name
+                )
+            )
         else:
-            os.chdir('eval_experiment')
-            os.system(f'pdflatex tables.tex')
+            os.chdir("eval_experiment")
+            os.system(f"pdflatex tables.tex")
     elif args.gif:
         render_gifs(settings_list)
     else:

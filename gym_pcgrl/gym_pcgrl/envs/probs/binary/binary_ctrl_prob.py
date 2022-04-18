@@ -6,8 +6,10 @@ from gym_pcgrl.envs.probs.binary.binary_prob import BinaryProblem
 class BinaryCtrlProblem(BinaryProblem):
     def __init__(self):
         super(BinaryCtrlProblem, self).__init__()
-        self._max_path_length = np.ceil(self._width / 2) * (self._height) + np.floor(self._height/2)
-#       self._max_path_length = np.ceil(self._width / 2 + 1) * (self._height)
+        self._max_path_length = np.ceil(self._width / 2) * (self._height) + np.floor(
+            self._height / 2
+        )
+        #       self._max_path_length = np.ceil(self._width / 2 + 1) * (self._height)
 
         # default conditional targets
         self.static_trgs = {"regions": 1, "path-length": self._max_path_length}
@@ -35,7 +37,7 @@ class BinaryCtrlProblem(BinaryProblem):
     # We do these things in the ParamRew wrapper (note that max change and iterations
 
     def get_episode_over(self, new_stats, old_stats):
-        """ If the generator has reached its targets. (change percentage and max iterations handled in pcgrl_env)"""
+        """If the generator has reached its targets. (change percentage and max iterations handled in pcgrl_env)"""
 
         return False
 

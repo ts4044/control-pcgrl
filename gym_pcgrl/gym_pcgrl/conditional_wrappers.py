@@ -11,7 +11,7 @@ import numpy as np
 from gym_pcgrl.envs.helper import get_range_reward
 
 
-#FIXME: This is not calculating the loss from a metric value (point) to a target metric range (line) correctly.
+# FIXME: This is not calculating the loss from a metric value (point) to a target metric range (line) correctly.
 # In particular we're only looking at integers and we're excluding the upper bound of the range.
 class ConditionalWrapper(gym.Wrapper):
     def __init__(self, env, ctrl_metrics=[], rand_params=False, **kwargs):
@@ -27,7 +27,11 @@ class ConditionalWrapper(gym.Wrapper):
             assert ctrl_metrics
         else:
             if ctrl_metrics:
-                print('Dummy controllable metrics: {}, will not be observed.'.format(ctrl_metrics))
+                print(
+                    "Dummy controllable metrics: {}, will not be observed.".format(
+                        ctrl_metrics
+                    )
+                )
         self.CA_action = kwargs.get("ca_action")
 
         self.render_gui = kwargs.get("render") and self.conditional
@@ -39,7 +43,7 @@ class ConditionalWrapper(gym.Wrapper):
         #       cond_trgs = self.unwrapped.cond_trgs
 
         self.ctrl_metrics = ctrl_metrics  # controllable metrics
-#       self.ctrl_metrics = ctrl_metrics[::-1] # Fucking stupid bug resulting from a fix introduced partway through training a relevant batch of experiments. Delete this in favor of line above eventually.
+        #       self.ctrl_metrics = ctrl_metrics[::-1] # Fucking stupid bug resulting from a fix introduced partway through training a relevant batch of experiments. Delete this in favor of line above eventually.
         # fixed metrics (i.e. playability constraints)
         self.static_metric_names = set(env.static_trgs.keys())
 
@@ -92,16 +96,19 @@ class ConditionalWrapper(gym.Wrapper):
             v = self.metrics[k]
 
             # if self.SC_RCT and k not in self.ctrl_metrics:
-                # self.unwrapped._reward_weights[k] = 0
+            # self.unwrapped._reward_weights[k] = 0
             # else:
-                # self.unwrapped._reward_weights[k] = self.unwrapped._reward_weights[k]
+            # self.unwrapped._reward_weights[k] = self.unwrapped._reward_weights[k]
 
         #       for k in self.ctrl_metrics:
         #           self.cond_bounds['{}_weight'.format(k)] = (0, 1)
         self.width = self.unwrapped.width
         self.observation_space = self.env.observation_space
         # FIXME: hack for gym-pcgrl
-        print("conditional wrapper, original observation space shape", self.observation_space.shape)
+        print(
+            "conditional wrapper, original observation space shape",
+            self.observation_space.shape,
+        )
         self.action_space = self.env.action_space
 
         # TODO: generalize this for 3D environments.
@@ -144,7 +151,11 @@ class ConditionalWrapper(gym.Wrapper):
             self.observation_space = gym.spaces.Box(low=low, high=high)
             # Yikes lol (this is to appease SB3)
             #       self.unwrapped.observation_space = self.observation_space
-        print("conditional observation space shape: {}".format(self.observation_space.shape))
+        print(
+            "conditional observation space shape: {}".format(
+                self.observation_space.shape
+            )
+        )
         self.next_trgs = None
 
         if self.render_gui and self.conditional:
@@ -160,7 +171,6 @@ class ConditionalWrapper(gym.Wrapper):
         self.last_loss = None
         self.ctrl_loss_metrics = ctrl_loss_metrics
         self.max_loss = self.get_max_loss()
-
 
     def get_control_bounds(self):
         controllable_bounds = {k: self.cond_bounds[k] for k in self.ctrl_metrics}
@@ -264,8 +274,8 @@ class ConditionalWrapper(gym.Wrapper):
         ob, rew, done, info = super().step(action, **kwargs)
         self.metrics = self.unwrapped._rep_stats
 
-        # Add target values of metrics of interest to the agent's obervation, so that it can learn to reproduce them 
-        # while editing the level. 
+        # Add target values of metrics of interest to the agent's obervation, so that it can learn to reproduce them
+        # while editing the level.
         if self.conditional:
             ob = self.observe_metric_trgs(ob)
 
@@ -284,9 +294,8 @@ class ConditionalWrapper(gym.Wrapper):
             # done = done or self.get_done()
             done = done
         else:
-#           assert self.infer
+            #           assert self.infer
             done = False
-
 
         return ob, reward, done, info
 
@@ -329,16 +338,27 @@ class ConditionalWrapper(gym.Wrapper):
 
         return loss
 
-
     def get_max_loss(self, ctrl_metrics=[]):
-        '''Upper bound on distance of level from static targets.'''
+        """Upper bound on distance of level from static targets."""
         net_max_loss = 0
         for k, v in self.static_trgs.items():
             if k in ctrl_metrics:
                 continue
             if isinstance(v, tuple):
-                max_loss = max(abs(v[0] - self.cond_bounds[k][0]), abs(v[1] - self.cond_bounds[k][1])) * self.unwrapped._reward_weights[k]
-            else: max_loss = max(abs(v - self.cond_bounds[k][0]), abs(v - self.cond_bounds[k][1])) * self.unwrapped._reward_weights[k]
+                max_loss = (
+                    max(
+                        abs(v[0] - self.cond_bounds[k][0]),
+                        abs(v[1] - self.cond_bounds[k][1]),
+                    )
+                    * self.unwrapped._reward_weights[k]
+                )
+            else:
+                max_loss = (
+                    max(
+                        abs(v - self.cond_bounds[k][0]), abs(v - self.cond_bounds[k][1])
+                    )
+                    * self.unwrapped._reward_weights[k]
+                )
             net_max_loss += max_loss
         return net_max_loss
 
@@ -434,6 +454,7 @@ class ConditionalWrapper(gym.Wrapper):
     def close(self):
         if self.render_gui and self.conditional:
             self.win.destroy()
+
 
 # TODO: What by jove this actually doing and why does it kind of work?
 # class PerlinNoiseyTargets(gym.Wrapper):

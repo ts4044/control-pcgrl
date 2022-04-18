@@ -81,6 +81,7 @@ class ToImage(gym.Wrapper):
 
     Can be stacked as Last Layer
     """
+
     def __init__(self, game, names, **kwargs):
         if isinstance(game, str):
             self.env = gym.make(game)
@@ -131,22 +132,21 @@ class ToImage(gym.Wrapper):
         final = np.empty([])
 
         for n in self.names:
-#           if len(self.env.observation_space.spaces[n].shape) == 3:
+            #           if len(self.env.observation_space.spaces[n].shape) == 3:
             if len(final.shape) == 0:
                 final = obs[n].reshape(*self.shape[:-1], -1)
             else:
-                final = np.append(
-                    final, obs[n].reshape(*self.shape[:-1], -1), axis=-1
-                )
-#           else:
-#               if len(final.shape) == 0:
-#                   final = obs[n].reshape(self.shape[0], self.shape[1], self.shape[2], -1)
-#               else:
-#                   final = np.append(
-#                       final, obs[n].reshape(self.shape[0], self.shape[1], self.shape[2], -1), axis=2
-#                   )
+                final = np.append(final, obs[n].reshape(*self.shape[:-1], -1), axis=-1)
+        #           else:
+        #               if len(final.shape) == 0:
+        #                   final = obs[n].reshape(self.shape[0], self.shape[1], self.shape[2], -1)
+        #               else:
+        #                   final = np.append(
+        #                       final, obs[n].reshape(self.shape[0], self.shape[1], self.shape[2], -1), axis=2
+        #                   )
 
         return final
+
 
 class ToImageCA(ToImage):
     def __init__(self, game, name, **kwargs):
@@ -159,7 +159,8 @@ class ToImageCA(ToImage):
 
         return obs, reward, done, info
 
-#class ToImage3D(ToImage):
+
+# class ToImage3D(ToImage):
 #    def __init__(self, game, names, **kwargs):
 #        if isinstance(game, str):
 #            self.env = gym.make(game)
@@ -198,6 +199,7 @@ class OneHotEncoding(gym.Wrapper):
     Transform any object in the dictionary to one hot encoding
     can be stacked
     """
+
     def __init__(self, game, name, **kwargs):
         if isinstance(game, str):
             self.env = gym.make(game)
@@ -252,7 +254,7 @@ class OneHotEncoding(gym.Wrapper):
         return obs
 
     def get_one_hot_map(self):
-        obs = {'map': self.env._rep._map}
+        obs = {"map": self.env._rep._map}
         return self.transform(obs)
 
 
@@ -260,6 +262,7 @@ class ActionMap(gym.Wrapper):
     """
     Transform the action input space to a 3D map of values where the argmax value will be applied can be stacked
     """
+
     def __init__(self, game, **kwargs):
         if isinstance(game, str):
             self.env = gym.make(game)
@@ -313,7 +316,6 @@ class ActionMap(gym.Wrapper):
         return obs, reward, done, info
 
 
-
 class CAMap(gym.Wrapper):
     def __init__(self, game, **kwargs):
         if isinstance(game, str):
@@ -324,7 +326,7 @@ class CAMap(gym.Wrapper):
         gym.Wrapper.__init__(self, self.env)
 
         assert (
-                "map" in self.env.observation_space.spaces.keys()
+            "map" in self.env.observation_space.spaces.keys()
         ), "This wrapper only works if you have a map key"
         self.old_obs = None
         self.one_hot = len(self.env.observation_space.spaces["map"].shape) > 2
@@ -348,6 +350,7 @@ class Cropped(gym.Wrapper):
     The crop size can be larger than the actual view, it just pads the outside
     This wrapper only works on games with a position coordinate can be stacked
     """
+
     def __init__(self, game, crop_size, pad_value, name, **kwargs):
         if isinstance(game, str):
             self.env = gym.make(game)
@@ -403,6 +406,7 @@ class Cropped(gym.Wrapper):
 
         return obs
 
+
 class Cropped3D(Cropped):
     def __init__(self, game, crop_size, pad_value, name, **kwargs):
         if isinstance(game, str):
@@ -412,29 +416,41 @@ class Cropped3D(Cropped):
         get_pcgrl_env(self.env).adjust_param(**kwargs)
         gym.Wrapper.__init__(self, self.env)
 
-        assert 'pos' in self.env.observation_space.spaces.keys(), 'This wrapper only works for representations thave have a position'
-        assert name in self.env.observation_space.spaces.keys(), 'This wrapper only works if you have a {} key'.format(name)
-        assert len(self.env.observation_space.spaces[name].shape) == 3, "This wrapper only works on 2D arrays."
+        assert (
+            "pos" in self.env.observation_space.spaces.keys()
+        ), "This wrapper only works for representations thave have a position"
+        assert (
+            name in self.env.observation_space.spaces.keys()
+        ), "This wrapper only works if you have a {} key".format(name)
+        assert (
+            len(self.env.observation_space.spaces[name].shape) == 3
+        ), "This wrapper only works on 2D arrays."
         self.name = name
         self.size = crop_size
-        self.pad = crop_size//2
+        self.pad = crop_size // 2
         self.pad_value = pad_value
 
         self.observation_space = gym.spaces.Dict({})
-        for (k,s) in self.env.observation_space.spaces.items():
+        for (k, s) in self.env.observation_space.spaces.items():
             self.observation_space.spaces[k] = s
         high_value = self.observation_space[self.name].high.max()
-        self.observation_space.spaces[self.name] = gym.spaces.Box(low=0, high=high_value, shape=(crop_size, crop_size, crop_size), dtype=np.uint8)
+        self.observation_space.spaces[self.name] = gym.spaces.Box(
+            low=0,
+            high=high_value,
+            shape=(crop_size, crop_size, crop_size),
+            dtype=np.uint8,
+        )
 
     def transform(self, obs):
         map = obs[self.name]
-        x, y, z = obs['pos']
+        x, y, z = obs["pos"]
 
-        #View Centering
+        # View Centering
         padded = np.pad(map, self.pad, constant_values=self.pad_value)
-        cropped = padded[z:z+self.size, y:y+self.size, x:x+self.size]
+        cropped = padded[z : z + self.size, y : y + self.size, x : x + self.size]
         obs[self.name] = cropped
         return obs
+
 
 ################################################################################
 #   Final used wrappers for the experiments
@@ -443,6 +459,7 @@ class CroppedImagePCGRLWrapper(gym.Wrapper):
     """
     The wrappers we use for narrow and turtle experiments
     """
+
     def __init__(self, game, crop_size, **kwargs):
         self.pcgrl_env = gym.make(game)
         # These envs don't use a lot of PCGRL conventions and are wide be default
@@ -457,7 +474,10 @@ class CroppedImagePCGRLWrapper(gym.Wrapper):
             self.pcgrl_env.adjust_param(**kwargs)
             # Cropping the map to the correct crop_size
             env = Cropped(
-                game=self.pcgrl_env, crop_size=crop_size, pad_value=self.pcgrl_env.get_border_tile(), name="map"
+                game=self.pcgrl_env,
+                crop_size=crop_size,
+                pad_value=self.pcgrl_env.get_border_tile(),
+                name="map",
             )
             # Transform to one hot encoding if not binary
 
@@ -475,13 +495,15 @@ class Cropped3DImagePCGRLWrapper(gym.Wrapper):
         self.pcgrl_env = gym.make(game)
         self.pcgrl_env.adjust_param(**kwargs)
         # Cropping the map to the correct crop_size
-        env = Cropped3D(self.pcgrl_env, crop_size, self.pcgrl_env.get_border_tile(), 'map')
+        env = Cropped3D(
+            self.pcgrl_env, crop_size, self.pcgrl_env.get_border_tile(), "map"
+        )
         # Transform to one hot encoding if not binary
-        if 'binary' not in game:
+        if "binary" not in game:
             # ) or ('minecraft_2Dmaze' not in game)
-            env = OneHotEncoding(env, 'map')
+            env = OneHotEncoding(env, "map")
         # Indices for flatting
-        flat_indices = ['map']
+        flat_indices = ["map"]
         # Final Wrapper has to be ToImage or ToFlat
         self.env = ToImage(env, flat_indices)
         gym.Wrapper.__init__(self, self.env)
@@ -491,6 +513,8 @@ class Cropped3DImagePCGRLWrapper(gym.Wrapper):
 Similar to the previous wrapper but the input now is the index in a 3D map (height, width, num_tiles) of the highest value
 Used for wide experiments
 """
+
+
 class ActionMapImagePCGRLWrapper(gym.Wrapper):
     def __init__(self, game, **kwargs):
         self.pcgrl_env = gym.make(game)
@@ -516,20 +540,21 @@ class ActionMapImagePCGRLWrapper(gym.Wrapper):
             self.env = ToImage(env, flat_indices)
         gym.Wrapper.__init__(self, self.env)
 
+
 # This precedes the ParamRew wrapper so we only worry about the map as observation
 class CAactionWrapper(gym.Wrapper):
     def __init__(self, game, **kwargs):
         self.pcgrl_env = gym.make(game)
         self.pcgrl_env.adjust_param(**kwargs)
         # Indices for flattening
-        flat_indices = ['map']
+        flat_indices = ["map"]
         env = self.pcgrl_env
         # Add the action map wrapper
         env = ActionMap(env)
         # Transform to one hot encoding if not binary
-        if 'binary' not in game:
+        if "binary" not in game:
             # ) or ('minecraft_2Dmaze' not in game)
-            env = OneHotEncoding(env, 'map')
+            env = OneHotEncoding(env, "map")
         # Final Wrapper has to be ToImage or ToFlat
         self.env = ToImage(env, flat_indices)
         gym.Wrapper.__init__(self, self.env)
@@ -540,7 +565,7 @@ class ActionMap3DImagePCGRLWrapper(gym.Wrapper):
         self.pcgrl_env = gym.make(game)
         self.pcgrl_env.adjust_param(**kwargs)
         # Indices for flattening
-        flat_indices = ['map']
+        flat_indices = ["map"]
         env = self.pcgrl_env
         width = env._prob._width
         height = env._prob._height
@@ -551,20 +576,22 @@ class ActionMap3DImagePCGRLWrapper(gym.Wrapper):
         # Transform to one hot encoding if not binary
 
         # we need the observation to be one-hot, so we can reliably separate map from control observations for NCA skip connection
-        env = OneHotEncoding(env, 'map')
+        env = OneHotEncoding(env, "map")
         # Final Wrapper has to be ToImage or ToFlat
         self.env = ToImage(env, flat_indices)
         gym.Wrapper.__init__(self, self.env)
         # NOTE: check this insanity out so cool
         # self.action_space = self.pcgrl_env.action_space = gym.spaces.MultiDiscrete([self.env.dim] * width * height * length)
-        self.action_space = self.unwrapped.action_space = gym.spaces.Discrete(self.env.dim * width * height * length)
+        self.action_space = self.unwrapped.action_space = gym.spaces.Discrete(
+            self.env.dim * width * height * length
+        )
         #       self.action_space = self.pcgrl_env.action_space = gym.spaces.Box(low=0, high=1, shape=(self.n_tile_types* width* height,))
         self.last_action = None
-        self.INFER = kwargs.get('infer')
+        self.INFER = kwargs.get("infer")
 
     def step(self, action, **kwargs):
         """
-        :param action: (int) the unravelled index of the action. We will re-ravel to get spatial (x, y, z) coordinates, 
+        :param action: (int) the unravelled index of the action. We will re-ravel to get spatial (x, y, z) coordinates,
                       and action type.
         """
         action = np.unravel_index(action, (self.observation_space.shape))

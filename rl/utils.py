@@ -7,9 +7,10 @@ import os
 import re
 
 import numpy as np
+
 # from stable_baselines import PPO2
 # from stable_baselines.bench import Monitor
-#from stable_baselines.common.vec_env import DummyVecEnv, SubprocVecEnv
+# from stable_baselines.common.vec_env import DummyVecEnv, SubprocVecEnv
 
 from gym_pcgrl import wrappers
 
@@ -39,7 +40,7 @@ PROB_CONTROLS = {
         # ["symmetry", "sol-length"],
     ],
     "smb_ctrl": [
-        ['enemies', 'jumps'],
+        ["enemies", "jumps"],
         # ["emptiness", "jumps"],
         # ["symmetry", "jumps"],
     ],
@@ -55,6 +56,7 @@ def get_map_width(game):
             return v
     raise Exception("Unknown game")
 
+
 # def get_crop_size(game):
 #     if "binary" in game:
 #         return 32
@@ -68,7 +70,7 @@ def get_map_width(game):
 #         raise Exception("Unknown game")
 
 
-#class RenderMonitor(Monitor):
+# class RenderMonitor(Monitor):
 #    """
 #    Wrapper for the environment to save data in .csv files.
 #    """
@@ -110,7 +112,7 @@ def get_action(obs, env, model, action_type=True):
     return action
 
 
-#def make_env(env_name, representation, rank=0, log_dir=None, **kwargs):
+# def make_env(env_name, representation, rank=0, log_dir=None, **kwargs):
 #    """
 #    Return a function that will initialize the environment when called.
 #    """
@@ -141,7 +143,7 @@ def get_action(obs, env, model, action_type=True):
 #    return _thunk
 
 
-#def make_vec_envs(env_name, representation, log_dir, n_cpu, **kwargs):
+# def make_vec_envs(env_name, representation, log_dir, n_cpu, **kwargs):
 #    """
 #    Prepare a vectorized environment using a list of 'make_env' functions.
 #    """
@@ -201,13 +203,13 @@ def get_exp_name(cfg):
 #     else:
 #         name = "latest"
 #     model_path = os.path.join(log_dir, "{}_model.pkl".format(name))
-# 
+#
 #     if not os.path.exists(model_path):
 #         model_path = os.path.join(log_dir, "{}_model.zip".format(name))
-# 
+#
 #     if not os.path.exists(model_path):
 #         files = [f for f in os.listdir(log_dir) if ".pkl" in f or ".zip" in f]
-# 
+#
 #         if len(files) > 0:
 #             # selects the last file listed by os.listdir
 #             # What the fuck is up with the random thing
@@ -217,13 +219,13 @@ def get_exp_name(cfg):
 #             return None
 # #           raise Exception("No models are saved at {}".format(model_path))
 #     print("Loading model at {}".format(model_path))
-# 
+#
 #     if n_tools:
 #         policy_kwargs = {"n_tools": n_tools}
 #     else:
 #         policy_kwargs = {}
 #     model = PPO2.load(model_path, reset_num_timesteps=False)
-# 
+#
 #     return model
 
 
@@ -231,13 +233,12 @@ def max_exp_idx(exp_name):
     log_dir = os.path.join("../runs", exp_name)
 
     # Collect log directories corresponding to this experiment.
-    log_files = glob.glob('{}*'.format(log_dir))
+    log_files = glob.glob("{}*".format(log_dir))
 
     if len(log_files) == 0:
         n = 1
     else:
         # Get the IDs of past log directories, assign the next one to this experiment (should only apply when reloading!)
-        log_ns = [re.search('_(\d+)(_log)?$', f).group(1) for f in log_files]
+        log_ns = [re.search("_(\d+)(_log)?$", f).group(1) for f in log_files]
         n = max(log_ns)
     return int(n)
-

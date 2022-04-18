@@ -1,22 +1,32 @@
 import numpy as np
 
-from gym_pcgrl.envs.probs.minecraft.minecraft_3DZelda_prob import Minecraft3DZeldaProblem
+from gym_pcgrl.envs.probs.minecraft.minecraft_3DZelda_prob import (
+    Minecraft3DZeldaProblem,
+)
 
 """
 Generate a fully connected top down layout where the longest path is greater than a certain threshold
 """
+
+
 class Minecraft3DZeldaCtrlProblem(Minecraft3DZeldaProblem):
     def __init__(self):
         super().__init__()
         n_floors = self._height // 3
-        max_path_per_floor = np.ceil(self._width / 2) * (self._length) + np.floor(self._length/2)
+        max_path_per_floor = np.ceil(self._width / 2) * (self._length) + np.floor(
+            self._length / 2
+        )
         self._max_path_length = n_floors * max_path_per_floor
         # change floor by stairs require 6 path_length for each floor
 
-#       self._max_path_length = np.ceil(self._width / 2 + 1) * (self._height)
+        #       self._max_path_length = np.ceil(self._width / 2 + 1) * (self._height)
 
         # default conditional targets
-        self.static_trgs = {"regions": 1, "path-length": self._max_path_length, "chests": 1}
+        self.static_trgs = {
+            "regions": 1,
+            "path-length": self._max_path_length,
+            "chests": 1,
+        }
 
         # boundaries for conditional inputs/targets
         self.cond_bounds = {
@@ -42,10 +52,9 @@ class Minecraft3DZeldaCtrlProblem(Minecraft3DZeldaProblem):
 
         self._reward_weights = {"regions": 1, "path-length": 1, "chests": 1}
 
-
     # NOTE: We do these things in the ParamRew wrapper.
     def get_episode_over(self, new_stats, old_stats):
-        """ If the generator has reached its targets. (change percentage and max iterations handled in pcgrl_env)"""
+        """If the generator has reached its targets. (change percentage and max iterations handled in pcgrl_env)"""
         return False
 
     def get_reward(self, new_stats, old_stats):

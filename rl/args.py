@@ -44,7 +44,7 @@ def parse_pcgrl_args(args, load_args=None):
         arg_dict.update(load_args)
 
     if opts.load_args is not None:
-        with open('configs/rl/auto/settings_{}.json'.format(opts.load_args)) as f:
+        with open("configs/rl/auto/settings_{}.json".format(opts.load_args)) as f:
             new_arg_dict = json.load(f)
             arg_dict.update(new_arg_dict)
 
@@ -104,15 +104,15 @@ def get_args():
         help="Which game level metrics to use as conditionals for the generator",
         default=["NONE"],
     )
-#   opts.add_argument(
-#       "--resume",
-#       help="Are we resuming from a saved training run?",
-#       action="store_true",
-#   )
+    #   opts.add_argument(
+    #       "--resume",
+    #       help="Are we resuming from a saved training run?",
+    #       action="store_true",
+    #   )
     args.add_argument(
         "--experiment_id",
         help="An experiment ID for tracking different runs of experiments with identical hyperparameters.",
-        type=int, 
+        type=int,
         default=0,
     )
     args.add_argument(
@@ -155,12 +155,12 @@ def get_args():
         help="Fancy ish teacher algorithm for controllable targets.",
         action="store_true",
     )
-#   opts.add_argument(
-#       "--evo_compare",
-#       help="Compare with work in evo-pcgrl using pyribs to train NNs as generators.",
-#       action="store_true",
-#   )
-    
+    #   opts.add_argument(
+    #       "--evo_compare",
+    #       help="Compare with work in evo-pcgrl using pyribs to train NNs as generators.",
+    #       action="store_true",
+    #   )
+
     args.add_argument(
         "--n_frames",
         help="The net total number of gameplay frames to be experienced by the agent during training.",
@@ -170,15 +170,15 @@ def get_args():
     args.add_argument(
         "-la",
         "--load_args",
-        help='Rather than having the above opts supplied by the command-line, load them from a settings.json file. (Of '
-        'course, the value of this arg in the json will have no effect.)',
+        help="Rather than having the above opts supplied by the command-line, load them from a settings.json file. (Of "
+        "course, the value of this arg in the json will have no effect.)",
         type=int,
         default=None,
     )
     args.add_argument(
         "--overwrite",
-        action='store_true',
-        help="Overwrite previous experiment with same name."
+        action="store_true",
+        help="Overwrite previous experiment with same name.",
     )
     args.add_argument(
         "--cuda",

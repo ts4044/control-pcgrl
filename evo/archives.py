@@ -13,11 +13,11 @@ class InitStatesArchive(GridArchive):
 
     def __init__(self, bin_sizes, bin_bounds, n_init_states, map_w, map_h, **kwargs):
         super(InitStatesArchive, self).__init__(bin_sizes, bin_bounds, **kwargs)
-#       if CONTINUOUS:
-#           self.init_states_archive = np.empty(
-#               shape=(*bin_sizes, n_init_states, 3, map_w, map_h)
-#           )
-#       else:
+        #       if CONTINUOUS:
+        #           self.init_states_archive = np.empty(
+        #               shape=(*bin_sizes, n_init_states, 3, map_w, map_h)
+        #           )
+        #       else:
         self.init_states_archive = np.empty(
             shape=(*bin_sizes, n_init_states, map_w, map_h)
         )
@@ -43,10 +43,12 @@ class InitStatesArchive(GridArchive):
 class MEGrid(containers.Grid):
     def __init__(self, bin_sizes, bin_bounds):
         max_items_per_bin = int(200) if np.all(np.array(bin_sizes) == 1) else 1
-        super(MEGrid, self).__init__(shape=bin_sizes, max_items_per_bin=max_items_per_bin,
-                                     features_domain=bin_bounds,
-                                     fitness_domain=((-np.inf, np.inf),),
-                                     )
+        super(MEGrid, self).__init__(
+            shape=bin_sizes,
+            max_items_per_bin=max_items_per_bin,
+            features_domain=bin_bounds,
+            fitness_domain=((-np.inf, np.inf),),
+        )
 
         # pyribs compatibility
         def get_index(self, bcs):
@@ -55,8 +57,12 @@ class MEGrid(containers.Grid):
     def add(self, item):
         # We'll clip the feature calues at the extremes
         # TODO: what's happening in this case using pyribs?
-        item.features.setValues([np.clip(item.features.values[i], *self.features_domain[i])
-                                 for i in range(len(item.features.values))])
+        item.features.setValues(
+            [
+                np.clip(item.features.values[i], *self.features_domain[i])
+                for i in range(len(item.features.values))
+            ]
+        )
 
         return super(MEGrid, self).add(item)
 
@@ -67,11 +73,11 @@ class MEInitStatesArchive(MEGrid):
 
     def __init__(self, bin_sizes, bin_bounds, n_init_states, map_w, map_h, **kwargs):
         super(MEInitStatesArchive, self).__init__(bin_sizes, bin_bounds, **kwargs)
-#       if CONTINUOUS:
-#           self.init_states_archive = np.empty(
-#               shape=(*bin_sizes, n_init_states, 3, map_w, map_h)
-#           )
-#       else:
+        #       if CONTINUOUS:
+        #           self.init_states_archive = np.empty(
+        #               shape=(*bin_sizes, n_init_states, 3, map_w, map_h)
+        #           )
+        #       else:
         self.init_states_archive = np.empty(
             shape=(*bin_sizes, n_init_states, map_w, map_h)
         )
@@ -90,7 +96,7 @@ class MEInitStatesArchive(MEGrid):
 
 
 class FlexArchive(InitStatesArchive):
-    """ Subclassing a pyribs archive class to do some funky stuff."""
+    """Subclassing a pyribs archive class to do some funky stuff."""
 
     def __init__(self, *args, **kwargs):
         self.n_evals = {}
@@ -164,7 +170,6 @@ class FlexArchive(InitStatesArchive):
         # Add it back
 
         self.add(solution, mean_obj, mean_bcs, None, n_evals=n_evals)
-
 
     def add(self, solution, objective_value, behavior_values, meta, n_evals=0):
 

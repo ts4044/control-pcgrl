@@ -1,13 +1,17 @@
 from pdb import set_trace as TT
 from gym.utils import seeding
 from gym_pcgrl.envs.helper import gen_random_map
+
 """
 The base class of all the representations
 """
+
+
 class Representation:
     """
     The base constructor where all the representation variable are defined with default values
     """
+
     def __init__(self):
         self._random_start = True
         self._map = None
@@ -25,6 +29,7 @@ class Representation:
     Returns:
         int: the used seed (same as input if not None)
     """
+
     def seed(self, seed=None):
         self._random, seed = seeding.np_random(seed)
         return seed
@@ -37,6 +42,7 @@ class Representation:
         height (int): the generated map height
         prob (dict(int,float)): the probability distribution of each tile value
     """
+
     def reset(self, width, height, prob):
         if self._random_start or self._old_map is None:
             self._map = gen_random_map(self._random, width, height, prob)
@@ -50,8 +56,9 @@ class Representation:
     Parameters:
         random_start (boolean): if the system will restart with a new map or the previous map
     """
+
     def adjust_param(self, **kwargs):
-        self._random_start = kwargs.get('random_start', self._random_start)
+        self._random_start = kwargs.get("random_start", self._random_start)
 
     """
     Gets the action space used by the representation
@@ -64,8 +71,9 @@ class Representation:
     Returns:
         ActionSpace: the action space used by that representation
     """
+
     def get_action_space(self, width, height, num_tiles):
-        raise NotImplementedError('get_action_space is not implemented')
+        raise NotImplementedError("get_action_space is not implemented")
 
     """
     Get the observation space used by the representation
@@ -78,8 +86,9 @@ class Representation:
     Returns:
         ObservationSpace: the observation space used by that representation
     """
+
     def get_observation_space(self, width, height, num_tiles):
-        raise NotImplementedError('get_observation_space is not implemented')
+        raise NotImplementedError("get_observation_space is not implemented")
 
     """
     Get the current representation observation object at the current moment
@@ -87,8 +96,9 @@ class Representation:
     Returns:
         observation: the current observation at the current moment
     """
+
     def get_observation(self):
-        raise NotImplementedError('get_observation is not implemented')
+        raise NotImplementedError("get_observation is not implemented")
 
     """
     Update the representation with the current action
@@ -99,8 +109,9 @@ class Representation:
     Returns:
         boolean: True if the action change the map, False if nothing changed
     """
+
     def update(self, action):
-        raise NotImplementedError('update is not implemented')
+        raise NotImplementedError("update is not implemented")
 
     """
     Modify the level image with any special modification based on the representation
@@ -113,5 +124,6 @@ class Representation:
     Returns:
         img: the modified level image
     """
+
     def render(self, lvl_image, tile_size, border_size):
         return lvl_image

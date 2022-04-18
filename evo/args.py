@@ -3,8 +3,9 @@ import pathlib
 from pdb import set_trace as TT
 import os
 import sys
-import argparse 
+import argparse
 import json
+
 
 def get_args(load_args=None):
     if load_args is not None:
@@ -163,7 +164,7 @@ def get_args(load_args=None):
     arg_dict = vars(args)
 
     if load_args is not None:
-        arg_dict.update(load_args)  
+        arg_dict.update(load_args)
     if args.load_args is not None:
         with open("configs/evo/auto/settings_{}.json".format(args.load_args)) as f:
             new_arg_dict = json.load(f)
@@ -239,7 +240,7 @@ def get_exp_name(args, arg_dict):
     #       PROBLEM, REPRESENTATION, MODEL, BCS, N_INIT_STATES
     #   )
     exp_name = "EvoPCGRL_"
-    if arg_dict['algo'] == "ME":
+    if arg_dict["algo"] == "ME":
         exp_name += "ME_"
     exp_name += "{}-{}_{}_{}_{}-batch_{}-pass".format(
         PROBLEM, REPRESENTATION, MODEL, BCS, N_INIT_STATES, N_STEPS
@@ -257,7 +258,9 @@ def get_exp_name(args, arg_dict):
     if args.mega:
         exp_name += "_MEGA"
     exp_name += "_" + arg_dict["exp_name"]
-    evo_runs_dir = os.path.join(pathlib.Path(__file__).parent.parent.resolve(), 'evo_runs')
+    evo_runs_dir = os.path.join(
+        pathlib.Path(__file__).parent.parent.resolve(), "evo_runs"
+    )
     SAVE_PATH = os.path.join(evo_runs_dir, exp_name)
 
     return SAVE_PATH

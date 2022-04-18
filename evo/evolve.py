@@ -45,8 +45,21 @@ from tqdm import tqdm
 
 from args import get_args
 from evo.archives import InitStatesArchive, MEGrid, MEInitStatesArchive, FlexArchive
-from evo.models import Individual, GeneratorNNDense, PlayerNN, set_nograd, get_init_weights, \
-    set_weights, Decoder, NCA, AuxNCA, NCA3D, GenCPPN2, GenSin2CPPN2, Sin2CPPN
+from evo.models import (
+    Individual,
+    GeneratorNNDense,
+    PlayerNN,
+    set_nograd,
+    get_init_weights,
+    set_weights,
+    Decoder,
+    NCA,
+    AuxNCA,
+    NCA3D,
+    GenCPPN2,
+    GenSin2CPPN2,
+    Sin2CPPN,
+)
 from evo.utils import get_one_hot_map
 from gym_pcgrl.conditional_wrappers import ConditionalWrapper
 from gym_pcgrl.envs.helper import get_string_map
@@ -107,32 +120,28 @@ def save_level_frames(level_frames, model_name):
     if not os.path.isdir(model_dir):
         os.mkdir(model_dir)
     for j, im in enumerate(level_frames):
-        im.save(
-            os.path.join(
-                model_dir, "frame_{:0>4d}.png".format(j)
-            )
-        )
+        im.save(os.path.join(model_dir, "frame_{:0>4d}.png".format(j)))
 
 
 def get_qd_score(archive, env, bc_names):
     max_loss = env.get_max_loss(ctrl_metrics=bc_names)
     max_loss = max_loss * TARGETS_PENALTY_WEIGHT
-    if ALGO == 'ME':
+    if ALGO == "ME":
         # qd_score = archive.qd_score()  # we need to specify lower *and upper* bounds for this
         # TODO: work out max diversity bonus to make this possible ?? Would this bias scores between n. latent seeds
         #   though?
         qd_score = np.nansum(archive.quality_array + max_loss)
     else:
         df = archive.as_pandas(include_solutions=False)
-        qd_score = (df['objective'] + max_loss).sum()
+        qd_score = (df["objective"] + max_loss).sum()
     return qd_score
 
 
 def save_train_stats(objs, archive, env, bc_names, itr=None):
     train_time_stats = {
-            "QD score": get_qd_score(archive, env, bc_names),
-            "objective": get_stats(objs),
-            }
+        "QD score": get_qd_score(archive, env, bc_names),
+        "objective": get_stats(objs),
+    }
 
     if itr is not None:
         save_path = os.path.join(SAVE_PATH, "checkpoint_{}".format(itr))
@@ -181,16 +190,16 @@ def save_grid(csv_name="levels", d=4):
 
     df = pd.read_csv(levels_path, header=0, skipinitialspace=True)
     #   .rename(
-#       index=str,
-#       header=0,
-#       columns={
-#           0: "level",
-#           1: "batch_reward",
-#           2: "variance",
-#           3: "diversity",
-#           4: "targets",
-#       },
-#   )
+    #       index=str,
+    #       header=0,
+    #       columns={
+    #           0: "level",
+    #           1: "batch_reward",
+    #           2: "variance",
+    #           3: "diversity",
+    #           4: "targets",
+    #       },
+    #   )
 
     bc_names = []
     for i in range(5, 7):  # assume 2 BCs
@@ -198,13 +207,13 @@ def save_grid(csv_name="levels", d=4):
     # look for the most valid levels
     targets_thresh = 0.0
     og_df = df
-    df = og_df[og_df['targets'] == targets_thresh]
+    df = og_df[og_df["targets"] == targets_thresh]
     last_len = len(df)
-    while len(df) < d**2 and targets_thresh > og_df['targets'].min():
+    while len(df) < d**2 and targets_thresh > og_df["targets"].min():
         last_len = len(df)
         # Raise the threshold so it includes at least one more individual
-        targets_thresh = og_df[og_df['targets'] < targets_thresh]['targets'].max()
-        df = og_df[og_df['targets'] >= targets_thresh]
+        targets_thresh = og_df[og_df["targets"] < targets_thresh]["targets"].max()
+        df = og_df[og_df["targets"] >= targets_thresh]
     # d = 6  # dimension of rows and columns
     figw, figh = 16.0, 16.0
     fig = plt.figure()
@@ -246,13 +255,21 @@ def save_grid(csv_name="levels", d=4):
             # TODO: this won't work for minecraft! Find a workaround?
             img = env.render(mode="rgb_array")
 
-#           axs[row_num, col_num].imshow(img, aspect="auto")
-            axs[-col_num-1, -row_num-1].imshow(img, aspect="auto")
+            #           axs[row_num, col_num].imshow(img, aspect="auto")
+            axs[-col_num - 1, -row_num - 1].imshow(img, aspect="auto")
 
     fig.subplots_adjust(hspace=0.01, wspace=0.01)
     levels_png_path = os.path.join(SAVE_PATH, "{}_grid.png".format(csv_name))
-    fig.text(0.5, 0.01, bc_names[0], ha='center', va='center',fontsize=fontsize)
-    fig.text(0.01, 0.5, bc_names[1], ha='center', va='center', rotation='vertical', fontsize=fontsize)
+    fig.text(0.5, 0.01, bc_names[0], ha="center", va="center", fontsize=fontsize)
+    fig.text(
+        0.01,
+        0.5,
+        bc_names[1],
+        ha="center",
+        va="center",
+        rotation="vertical",
+        fontsize=fontsize,
+    )
     plt.tight_layout(rect=[0.025, 0.025, 1, 1])
     fig.savefig(levels_png_path, dpi=300)
     plt.close()
@@ -262,10 +279,12 @@ def auto_garbage_collect(pct=80.0):
     if psutil.virtual_memory().percent >= pct:
         gc.collect()
 
+
 def tran_action(action, **kwargs):
     skip = False
     # return action, skip
     return action.swapaxes(1, 2), skip
+
 
 # usually, if action does not turn out to change the map, then the episode is terminated
 # the skip boolean tells us whether, for some representation-specific reason, the agent has chosen not to act, but
@@ -423,20 +442,23 @@ def get_init_states(init_states_archive, index):
     return init_states_archive[index]
 
 
-
 def mate_individuals(ind_0, ind_1):
     return ind_0.mate(ind_1)
+
 
 def mutate_individual(ind):
     ind.mutate()
     return (ind,)
 
-class MEOptimizer():
-    def __init__(self, grid, ind_cls, batch_size, ind_cls_args, start_time=None, stats=None):
+
+class MEOptimizer:
+    def __init__(
+        self, grid, ind_cls, batch_size, ind_cls_args, start_time=None, stats=None
+    ):
         self.batch_size = batch_size
         self.grid = grid
         self.inds = []
-        self.stats=stats
+        self.stats = stats
         for _ in range(batch_size):
             self.inds.append(ind_cls(**ind_cls_args))
         toolbox = Toolbox()
@@ -451,26 +473,32 @@ class MEOptimizer():
         if start_time == None:
             self.start_time = timer()
         self.logbook = deap.tools.Logbook()
-        self.logbook.header = ["iteration", "containerSize", "evals", "nbUpdated"] + (stats.fields if stats else []) + \
-            ["meanFitness", "maxFitness", "elapsed"]
+        self.logbook.header = (
+            ["iteration", "containerSize", "evals", "nbUpdated"]
+            + (stats.fields if stats else [])
+            + ["meanFitness", "maxFitness", "elapsed"]
+        )
         self.i = 0
 
-
     def tell(self, objective_values, behavior_values):
-        """Tell MAP-Elites about the performance (and diversity measures) of new offspring / candidate individuals, 
+        """Tell MAP-Elites about the performance (and diversity measures) of new offspring / candidate individuals,
         after evaluation on the task."""
         # Update individuals' stats with results of last batch of simulations
-#       [(ind.fitness.setValues(obj), ind.fitness.features.setValues(bc)) for
-#        (ind, obj, bc) in zip(self.inds, objective_values, behavior_values)]
+        #       [(ind.fitness.setValues(obj), ind.fitness.features.setValues(bc)) for
+        #        (ind, obj, bc) in zip(self.inds, objective_values, behavior_values)]
         for (ind, obj, bc) in zip(self.inds, objective_values, behavior_values):
             ind.fitness.setValues([obj])
             ind.features.setValues(bc)
         # Replace the current population by the offspring
-        nb_updated = self.grid.update(self.inds, issue_warning=True, ignore_exceptions=False)
+        nb_updated = self.grid.update(
+            self.inds, issue_warning=True, ignore_exceptions=False
+        )
         # Compile stats and update logs
         record = self.stats.compile(self.grid) if self.stats else {}
 
-        assert len(self.grid._best_fitness.values) == 1, "Multi-objective evolution is not supported."
+        assert (
+            len(self.grid._best_fitness.values) == 1
+        ), "Multi-objective evolution is not supported."
 
         # FIXME: something is wrong here, this is the min, not max.
         # maxFitness = self.grid._best_fitness[0]
@@ -478,9 +506,16 @@ class MEOptimizer():
         fits = [ind.fitness.values[0] for ind in self.grid]
         maxFitness = np.max(fits)
         meanFitness = np.mean(fits)
-        self.logbook.record(iteration=self.i, containerSize=self.grid.size_str(), evals=len(self.inds), 
-                            nbUpdated=nb_updated, elapsed=timer()-self.start_time, meanFitness=meanFitness, maxFitness=maxFitness,
-                            **record)
+        self.logbook.record(
+            iteration=self.i,
+            containerSize=self.grid.size_str(),
+            evals=len(self.inds),
+            nbUpdated=nb_updated,
+            elapsed=timer() - self.start_time,
+            meanFitness=meanFitness,
+            maxFitness=maxFitness,
+            **record,
+        )
         self.i += 1
         print(self.logbook.stream)
 
@@ -493,7 +528,7 @@ class MEOptimizer():
         elif len(self.grid) < self.batch_size:
             # If few elites, supplement the population with individuals from the last generation
             np.random.shuffle(self.inds)
-            breedable = self.grid.items + self.inds[:-len(self.grid)]
+            breedable = self.grid.items + self.inds[: -len(self.grid)]
 
         else:
             breedable = self.grid
@@ -507,9 +542,7 @@ class MEOptimizer():
         return self.inds
 
 
-def unravel_index(
-    indices: th.LongTensor, shape: Tuple[int, ...]
-) -> th.LongTensor:
+def unravel_index(indices: th.LongTensor, shape: Tuple[int, ...]) -> th.LongTensor:
     r"""Converts flat indices into unraveled coordinates in a target shape.
 
     This is a `th` implementation of `numpy.unravel_index`.
@@ -539,7 +572,7 @@ def unravel_index(
 # class GeneratorNN(ResettableNN):
 
 
-#class ReluCPPN(ResettableNN):
+# class ReluCPPN(ResettableNN):
 
 
 # Sin2 is siren-type net (i.e. sinusoidal, fixed-topology CPPN), with proper activation as per paper
@@ -553,6 +586,7 @@ def unravel_index(
 """
 Behavior Characteristics Functions
 """
+
 
 def get_blur(float_map, env):
     return measure.blur_effect(float_map)
@@ -592,9 +626,15 @@ def get_counts(int_map, env):
     returns a python list with tile counts for each tile normalized to a range of 0.0 to 1.0
     """
     if not ENV3D:
-        max_val = env.unwrapped._prob._width * env.unwrapped._prob._height  # for example 14*14=196
+        max_val = (
+            env.unwrapped._prob._width * env.unwrapped._prob._height
+        )  # for example 14*14=196
     else:
-        max_val = env.unwrapped._prob._width * env.unwrapped._prob._height * env.unwrapped._prob.length
+        max_val = (
+            env.unwrapped._prob._width
+            * env.unwrapped._prob._height
+            * env.unwrapped._prob.length
+        )
 
     return [
         np.sum(int_map.flatten() == tile) / max_val
@@ -605,6 +645,7 @@ def get_counts(int_map, env):
 def get_brightness(float_map, env):
     assert np.min(float_map) >= 0.0 and np.max(float_map) <= 1.0
     return np.sum(float_map) / reduce(mul, float_map.shape)
+
 
 rand_sols = {}
 
@@ -625,13 +666,20 @@ def get_emptiness(int_map, env):
     """
     # TODO: double check that the "0th" tile-type actually corresponds to empty tiles
     if not ENV3D:
-        max_val = env.unwrapped._prob._width * env.unwrapped._prob._height  # for example 14*14=196
+        max_val = (
+            env.unwrapped._prob._width * env.unwrapped._prob._height
+        )  # for example 14*14=196
     else:
-        max_val = env.unwrapped._prob._width * env.unwrapped._prob._height * env.unwrapped._prob._length
+        max_val = (
+            env.unwrapped._prob._width
+            * env.unwrapped._prob._height
+            * env.unwrapped._prob._length
+        )
 
     return np.sum(int_map.flatten() == 0) / max_val
 
-#from pymks import PrimitiveTransformer, plot_microstructures, two_point_stats, TwoPointCorrelation
+
+# from pymks import PrimitiveTransformer, plot_microstructures, two_point_stats, TwoPointCorrelation
 
 
 def get_hor_sym(int_map, env):
@@ -642,9 +690,16 @@ def get_hor_sym(int_map, env):
     returns a symmetry float value normalized to a range of 0.0 to 1.0
     """
     if not ENV3D:
-        max_val = env.unwrapped._prob._width * env.unwrapped._prob._height / 2  # for example 14*14/2=98
+        max_val = (
+            env.unwrapped._prob._width * env.unwrapped._prob._height / 2
+        )  # for example 14*14/2=98
     else:
-        max_val = env.unwrapped._prob._width * env.unwrapped._prob._length / 2 * env.unwrapped._prob._height  
+        max_val = (
+            env.unwrapped._prob._width
+            * env.unwrapped._prob._length
+            / 2
+            * env.unwrapped._prob._height
+        )
     m = 0
 
     if int(int_map.shape[0]) % 2 == 0:
@@ -675,9 +730,16 @@ def get_ver_sym(int_map, env):
     returns a symmetry float value normalized to a range of 0.0 to 1.0
     """
     if not ENV3D:
-        max_val = env.unwrapped._prob._width * env.unwrapped._prob._height / 2  # for example 14*14/2=98
+        max_val = (
+            env.unwrapped._prob._width * env.unwrapped._prob._height / 2
+        )  # for example 14*14/2=98
     else:
-        max_val = env.unwrapped._prob._width * env.unwrapped._prob._length / 2 * env.unwrapped._prob._height  
+        max_val = (
+            env.unwrapped._prob._width
+            * env.unwrapped._prob._length
+            / 2
+            * env.unwrapped._prob._height
+        )
     m = 0
 
     if int(int_map.shape[1]) % 2 == 0:
@@ -758,9 +820,9 @@ def get_bc(bc_name, int_map, stats, env, idx):
         return get_brightness(int_map, env)  # FIXME: name incorrect, this a float map
     elif bc_name == "entropy":
         return get_entropy(int_map, env)
-    elif bc_name == 'blur':
+    elif bc_name == "blur":
         return get_blur(int_map, env)
-    elif bc_name == 'rand_sol':
+    elif bc_name == "rand_sol":
         return get_rand_sol(int_map, env, idx=idx)
     elif bc_name == "NONE":
         return 0
@@ -970,7 +1032,7 @@ def multi_play_evo(
 
 
 def gen_playable_levels(env, gen_model, init_states, n_tile_types):
-    """ To get only the playable levels of a given generator, so that we can run player evaluations on them more quickly."""
+    """To get only the playable levels of a given generator, so that we can run player evaluations on them more quickly."""
     final_levels = []
 
     for int_map in init_states:
@@ -985,7 +1047,7 @@ def gen_playable_levels(env, gen_model, init_states, n_tile_types):
         while not done:
             int_tensor = th.unsqueeze(th.Tensor(obs), 0)
             action, done = gen_model(int_tensor)[0].numpy()
-#           obs = action
+            #           obs = action
             int_map = done or action.argmax(axis=0)
             env.unwrapped._rep._map = int_map
             done = done or (int_map == last_int_map).all() or n_step >= N_STEPS
@@ -1029,15 +1091,24 @@ def player_simulate(
 
     return reward, bcs
 
-def plot_score_heatmap(scores, score_name, bc_names, cmap_str="magma", bcs_in_filename=True,
-                       lower_bounds=None, upper_bounds=None,
-                       x_bounds=None, y_bounds=None):
+
+def plot_score_heatmap(
+    scores,
+    score_name,
+    bc_names,
+    cmap_str="magma",
+    bcs_in_filename=True,
+    lower_bounds=None,
+    upper_bounds=None,
+    x_bounds=None,
+    y_bounds=None,
+):
     scores = scores.T
     ax = plt.gca()
     ax.set_xlim(lower_bounds[0], upper_bounds[0])
     ax.set_ylim(lower_bounds[1], upper_bounds[1])
     label_fontdict = {
-        'fontsize': 16,
+        "fontsize": 16,
     }
     ax.set_xlabel(bc_names[0], fontdict=label_fontdict)
     ax.set_ylabel(bc_names[1], fontdict=label_fontdict)
@@ -1063,23 +1134,24 @@ def plot_score_heatmap(scores, score_name, bc_names, cmap_str="magma", bcs_in_fi
     if not RANDOM_INIT_LEVELS:
         f_name = f_name + "_fixLvls"
     f_name += ".png"
-    plt.title(score_name, fontdict={'fontsize': 24})
+    plt.title(score_name, fontdict={"fontsize": 24})
     plt.tight_layout()
     plt.savefig(os.path.join(SAVE_PATH, f_name))
     plt.close()
 
+
 def simulate(
-        env,
-        model,
-        n_tile_types,
-        init_states,
-        bc_names,
-        static_targets,
-        target_weights,
-        seed=None,
-        player_1=None,
-        player_2=None,
-        render_levels=False
+    env,
+    model,
+    n_tile_types,
+    init_states,
+    bc_names,
+    static_targets,
+    target_weights,
+    seed=None,
+    player_1=None,
+    player_2=None,
+    render_levels=False,
 ):
     """
     Function to run a single trajectory and return results.
@@ -1123,9 +1195,24 @@ def simulate(
 
     # init_states has shape (n_episodes, n_chan, height, width)
     if not ENV3D:
-        final_levels = np.empty(shape=(init_states.shape[0], env.unwrapped._prob._height, env.unwrapped._prob._width), dtype=np.uint8)
+        final_levels = np.empty(
+            shape=(
+                init_states.shape[0],
+                env.unwrapped._prob._height,
+                env.unwrapped._prob._width,
+            ),
+            dtype=np.uint8,
+        )
     else:
-        final_levels = np.empty(shape=(init_states.shape[0], env.unwrapped._prob._height, env.unwrapped._prob._width, env.unwrapped._prob._length), dtype=np.uint8)
+        final_levels = np.empty(
+            shape=(
+                init_states.shape[0],
+                env.unwrapped._prob._height,
+                env.unwrapped._prob._width,
+                env.unwrapped._prob._length,
+            ),
+            dtype=np.uint8,
+        )
     batch_reward = 0
     batch_time_penalty = 0
     batch_targets_penalty = 0
@@ -1183,12 +1270,20 @@ def simulate(
                 n_tiles=n_tile_types,
             )
             if not ENV3D:
-                change, [x, y] = env.unwrapped._rep.update(action, continuous=CONTINUOUS)
+                change, [x, y] = env.unwrapped._rep.update(
+                    action, continuous=CONTINUOUS
+                )
             else:
-                change, [x, y, z] = env.unwrapped._rep.update(action, continuous=CONTINUOUS)
+                change, [x, y, z] = env.unwrapped._rep.update(
+                    action, continuous=CONTINUOUS
+                )
             int_map = env.unwrapped._rep._map
-            obs = get_one_hot_map(env.unwrapped._rep.get_observation()["map"], n_tile_types)
-            preprocess_observation(obs, x=env.unwrapped._rep._x, y=env.unwrapped._rep._y)
+            obs = get_one_hot_map(
+                env.unwrapped._rep.get_observation()["map"], n_tile_types
+            )
+            preprocess_observation(
+                obs, x=env.unwrapped._rep._x, y=env.unwrapped._rep._y
+            )
             #           int_map = action.argmax(axis=0)
             #           obs = get_one_hot_map(int_map, n_tile_types)
             #           env.unwrapped._rep._map = int_map
@@ -1207,12 +1302,18 @@ def simulate(
                 final_levels[n_episode] = int_map
                 if not ENV3D:
                     stats = env.unwrapped._prob.get_stats(
-                        get_string_map(int_map, env.unwrapped._prob.get_tile_types(), continuous=CONTINUOUS),
+                        get_string_map(
+                            int_map,
+                            env.unwrapped._prob.get_tile_types(),
+                            continuous=CONTINUOUS,
+                        ),
                         # lenient_paths = True,
                     )
                 else:
                     stats = env.unwrapped._prob.get_stats(
-                        get_string_map_3d(int_map, env.unwrapped._prob.get_tile_types()),
+                        get_string_map_3d(
+                            int_map, env.unwrapped._prob.get_tile_types()
+                        ),
                         # lenient_paths = True,
                     )
 
@@ -1240,7 +1341,8 @@ def simulate(
                         # take the smallest distance from current value to any point in range
                         # NOTE: we're assuming this metric is integer-valued
                         trg_penalty_k = abs(
-                            np.arange(static_targets[k][0], static_targets[k][1]) - stats[k]
+                            np.arange(static_targets[k][0], static_targets[k][1])
+                            - stats[k]
                         ).min()
                     else:
                         trg_penalty_k = abs(static_targets[k] - stats[k])
@@ -1264,27 +1366,34 @@ def simulate(
                     if INFER:
                         print("p_2 reward: ", p_2_rew)
 
-                    max_regret = env.unwrapped._prob.max_reward - env.unwrapped._prob.min_reward
+                    max_regret = (
+                        env.unwrapped._prob.max_reward - env.unwrapped._prob.min_reward
+                    )
                     # add this in case we get worst possible regret (don't want to punish a playable map)
                     batch_play_bonus += max_regret + p_1_rew - p_2_rew
 
-                    #TODO Add discriminator here
+                    # TODO Add discriminator here
 
             if RENDER:
                 if INFER:
                     if ENV3D:
                         stats = env.unwrapped._prob.get_stats(
-                            get_string_map_3d(int_map, env.unwrapped._prob.get_tile_types()),
+                            get_string_map_3d(
+                                int_map, env.unwrapped._prob.get_tile_types()
+                            ),
                             # lenient_paths=True,
                         )
                         print(stats)
                     else:
                         stats = env.unwrapped._prob.get_stats(
-                            get_string_map(int_map, env.unwrapped._prob.get_tile_types(), continuous=CONTINUOUS),
+                            get_string_map(
+                                int_map,
+                                env.unwrapped._prob.get_tile_types(),
+                                continuous=CONTINUOUS,
+                            ),
                             # lenient_paths=True,
                         )
                 env.render()
-
 
             if done and INFER:  # and not (EVALUATE and THREADS):
                 if not EVALUATE:
@@ -1297,7 +1406,9 @@ def simulate(
             last_int_map = int_map
             n_step += 1
     final_bcs = [bcs[i].mean() for i in range(bcs.shape[0])]
-    batch_targets_penalty = TARGETS_PENALTY_WEIGHT * batch_targets_penalty / max(N_INIT_STATES, 1)
+    batch_targets_penalty = (
+        TARGETS_PENALTY_WEIGHT * batch_targets_penalty / max(N_INIT_STATES, 1)
+    )
     # batch_targets_penalty = batch_targets_penalty / N_INIT_STATES
     batch_reward += batch_targets_penalty
 
@@ -1333,7 +1444,7 @@ def simulate(
             # ad hoc scaling :/
             diversity_bonus = 10 * diversity_bonus / (width * height)
             # FIXME: Removing this for ad-hoc comparison for now (re: loderunner)
-#           batch_reward = batch_reward + max(0, variance_penalty + diversity_bonus)
+        #           batch_reward = batch_reward + max(0, variance_penalty + diversity_bonus)
         else:
             variance_penalty = None
             diversity_bonus = None
@@ -1389,7 +1500,7 @@ class EvoPCGRL:
             # here we assume that all (x, y) locations in the observation space have the same upper/lower bound
             self.n_tile_types = self.env.observation_space["map"].high[0, 0] + 1
         else:
-            assert self.env.observation_space["map"].low[0,0,0] == 0
+            assert self.env.observation_space["map"].low[0, 0, 0] == 0
             self.n_tile_types = self.env.observation_space["map"].high[0, 0, 0] + 1
             self.length = self.env.unwrapped._prob._length
         self.width = self.env.unwrapped._prob._width
@@ -1423,10 +1534,23 @@ class EvoPCGRL:
 
         self.static_targets = self.env.unwrapped._prob.static_trgs
 
-        if REEVALUATE_ELITES or (RANDOM_INIT_LEVELS and args.n_init_states != 0) and (not ENV3D):
+        if (
+            REEVALUATE_ELITES
+            or (RANDOM_INIT_LEVELS and args.n_init_states != 0)
+            and (not ENV3D)
+        ):
             init_level_archive_args = (N_INIT_STATES, self.height, self.width)
-        elif REEVALUATE_ELITES or (RANDOM_INIT_LEVELS and args.n_init_states != 0) and ENV3D:
-            init_level_archive_args = (N_INIT_STATES, self.height, self.width, self.length)
+        elif (
+            REEVALUATE_ELITES
+            or (RANDOM_INIT_LEVELS and args.n_init_states != 0)
+            and ENV3D
+        ):
+            init_level_archive_args = (
+                N_INIT_STATES,
+                self.height,
+                self.width,
+                self.length,
+            )
         else:
             init_level_archive_args = ()
         self.init_level_archive_args = init_level_archive_args
@@ -1480,14 +1604,16 @@ class EvoPCGRL:
 
                 for bc_name in self.bc_names:
                     if bc_name not in self.bc_bounds:
-                        raise Exception(f"Behavior characteristic / measure `{bc_name}` not found in self.bc_bounds."
-                        "You probably need to specify the lower/upper bounds of this measure in prob.cond_bounds.")
+                        raise Exception(
+                            f"Behavior characteristic / measure `{bc_name}` not found in self.bc_bounds."
+                            "You probably need to specify the lower/upper bounds of this measure in prob.cond_bounds."
+                        )
 
                 self.gen_archive = gen_archive_cls(
                     # minimum of 100 for each behavioral characteristic, or as many different values as the BC can take on, if it is less
                     # [min(100, int(np.ceil(self.bc_bounds[bc_name][1] - self.bc_bounds[bc_name][0]))) for bc_name in self.bc_names],
                     [100 for _ in self.bc_names],
-#                   [1 for _ in self.bc_names],
+                    #                   [1 for _ in self.bc_names],
                     # min/max for each BC
                     [self.bc_bounds[bc_name] for bc_name in self.bc_names],
                     *init_level_archive_args,
@@ -1543,15 +1669,20 @@ class EvoPCGRL:
                 n_flat_actions=n_flat_actions,
             )
         # TODO: remove this, just call model "NCA"
-#       elif MODEL == "NCA":
-#           self.gen_model = globals()["GeneratorNN"](
-#               n_in_chans=self.n_tile_types, n_actions=n_out_chans
-#           )
-#       else:
-        n_observed_tiles = 0 if "Decoder" in MODEL or "CPPN2" in MODEL else self.n_tile_types
+        #       elif MODEL == "NCA":
+        #           self.gen_model = globals()["GeneratorNN"](
+        #               n_in_chans=self.n_tile_types, n_actions=n_out_chans
+        #           )
+        #       else:
+        n_observed_tiles = (
+            0 if "Decoder" in MODEL or "CPPN2" in MODEL else self.n_tile_types
+        )
         self.gen_model = globals()[MODEL](
-            n_in_chans=n_observed_tiles + N_LATENTS, n_actions=n_out_chans, map_width=self.env.unwrapped._prob._width,
-            render=RENDER)
+            n_in_chans=n_observed_tiles + N_LATENTS,
+            n_actions=n_out_chans,
+            map_width=self.env.unwrapped._prob._width,
+            render=RENDER,
+        )
         # TODO: toggle CUDA/GPU use with command line argument.
         if CUDA:
             self.gen_model.cuda()
@@ -1590,11 +1721,11 @@ class EvoPCGRL:
         #         for _ in range(n_emitters)  # Create 5 separate emitters.
         #     ]
 
-        # Otherwise, we're using CMAME. 
+        # Otherwise, we're using CMAME.
         else:
             n_emitters = 5
             batch_size = 30
-            # Get the initial (continuous) weights so that we can feed them to CMAME for covariance matrix 
+            # Get the initial (continuous) weights so that we can feed them to CMAME for covariance matrix
             # adaptation.
             initial_w = get_init_weights(self.gen_model)
             assert len(initial_w.shape) == 1
@@ -1634,18 +1765,19 @@ class EvoPCGRL:
             self.play_optimizer = Optimizer(self.play_archive, play_emitters)
         if ALGO == "ME":
             ind_cls_args = {
-                    'model_cls': globals()[MODEL],
-                   'n_in_chans': self.n_tile_types,
-                   'n_actions': self.n_tile_types,
+                "model_cls": globals()[MODEL],
+                "n_in_chans": self.n_tile_types,
+                "n_actions": self.n_tile_types,
             }
             if MODEL == "DirectBinaryEncoding":
-                ind_cls_args.update({'map_width': self.env.unwrapped._prob._width})
+                ind_cls_args.update({"map_width": self.env.unwrapped._prob._width})
 
-            self.gen_optimizer = MEOptimizer(grid=self.gen_archive,
-                                             ind_cls=Individual,
-                                             batch_size=batch_size,
-                                             ind_cls_args=ind_cls_args,
-                                             )
+            self.gen_optimizer = MEOptimizer(
+                grid=self.gen_archive,
+                ind_cls=Individual,
+                batch_size=batch_size,
+                ind_cls_args=ind_cls_args,
+            )
         else:
             self.gen_optimizer = Optimizer(self.gen_archive, gen_emitters)
 
@@ -1658,14 +1790,29 @@ class EvoPCGRL:
             if not ENV3D:
                 if CONTINUOUS:
                     self.init_states = np.zeros(shape=(1, 3, self.height, self.width))
-                    self.init_states[0, :, self.height//2-sh//2:self.height//2+sh//2, self.width//2-sw//2: self.width//2+sw//2] = 1
+                    self.init_states[
+                        0,
+                        :,
+                        self.height // 2 - sh // 2 : self.height // 2 + sh // 2,
+                        self.width // 2 - sw // 2 : self.width // 2 + sw // 2,
+                    ] = 1
                 else:
                     self.init_states = np.zeros(shape=(1, self.height, self.width))
-                    self.init_states[0, self.height//2-sh//2:self.height//2+sh//2, self.width//2-sw//2: self.width//2+sw//2] = 1
+                    self.init_states[
+                        0,
+                        self.height // 2 - sh // 2 : self.height // 2 + sh // 2,
+                        self.width // 2 - sw // 2 : self.width // 2 + sw // 2,
+                    ] = 1
             else:
-                self.init_states = np.zeros(shape=(1, self.height, self.width, self.length))
-                self.init_states[0, self.height//2-sh//2:self.height//2+sh//2, self.width//2-sw//2: self.width//2+sw//2,
-                                 self.length//2-sw//2: self.length//2+sw//2] = 1
+                self.init_states = np.zeros(
+                    shape=(1, self.height, self.width, self.length)
+                )
+                self.init_states[
+                    0,
+                    self.height // 2 - sh // 2 : self.height // 2 + sh // 2,
+                    self.width // 2 - sw // 2 : self.width // 2 + sw // 2,
+                    self.length // 2 - sw // 2 : self.length // 2 + sw // 2,
+                ] = 1
         else:
             self.init_states = gen_latent_seeds(N_INIT_STATES, self.env)
 
@@ -1807,8 +1954,8 @@ class EvoPCGRL:
                 self.gen_optimizer.tell(objs, bcs, jacobian=jacobian)
             else:
                 self.gen_optimizer.tell(objs, bcs)
-#               for emitter in self.gen_optimizer.emitters:
-#
+            #               for emitter in self.gen_optimizer.emitters:
+            #
 
             # Re-evaluate elite generators. If doing CMAES,re-evaluate every iteration. Otherwise, try to let the archive grow.
 
@@ -1817,17 +1964,19 @@ class EvoPCGRL:
                 #               curr_archive_size = len(df)
                 high_performing = df.sample(frac=1)
                 elite_models = np.array(high_performing.loc[:, "solution_0":])
-                if 'behavior_1' in high_performing.columns:
-                    elite_bcs = np.array(high_performing.loc[:, "behavior_0":"behavior_1"])
+                if "behavior_1" in high_performing.columns:
+                    elite_bcs = np.array(
+                        high_performing.loc[:, "behavior_0":"behavior_1"]
+                    )
                 else:
                     elite_bcs = np.array(high_performing.loc[:, "behavior_0"])
-                #if there is not behavior_1
+                # if there is not behavior_1
                 if THREADS:
                     futures = [
                         multi_evo.remote(
                             self.env,
                             self.gen_model,
-                            elite_models[i], 
+                            elite_models[i],
                             self.n_tile_types,
                             init_states,
                             self.bc_names,
@@ -1876,11 +2025,13 @@ class EvoPCGRL:
                         # pprint.pprint(self.gen_archive.obj_hist, width=1)
                         # pprint.pprint(self.gen_archive.bc_hist, width=1)
                         old_el_bcs = elite_bcs[elite_i]
-                        if not isinstance(old_el_bcs,np.ndarray):
+                        if not isinstance(old_el_bcs, np.ndarray):
                             old_el_bcs = np.array([old_el_bcs])
-                        #TODO fix here
+                        # TODO fix here
                         gen_model_weights = elite_models[elite_i]
-                        gen_model = set_weights(self.gen_model, gen_model_weights, algo=ALGO)
+                        gen_model = set_weights(
+                            self.gen_model, gen_model_weights, algo=ALGO
+                        )
 
                         level_json, el_obj, el_bcs = simulate(
                             env=self.env,
@@ -1964,7 +2115,9 @@ class EvoPCGRL:
 
                             for play_w in play_sols:
                                 play_i += 1
-                                play_model = set_weights(self.play_model, play_w, algo=ALGO)
+                                play_model = set_weights(
+                                    self.play_model, play_w, algo=ALGO
+                                )
                                 m_obj, m_bcs = player_simulate(
                                     env=self.env,
                                     n_tile_types=self.n_tile_types,
@@ -1984,7 +2137,9 @@ class EvoPCGRL:
 
                         for elite_i in range(10):
                             play_model_weights = elite_models[elite_i]
-                            init_nn = set_weights(self.play_model, play_model_weights, algo=ALGO)
+                            init_nn = set_weights(
+                                self.play_model, play_model_weights, algo=ALGO
+                            )
 
                             obj, bcs = player_simulate(
                                 self.env,
@@ -2011,33 +2166,38 @@ class EvoPCGRL:
                         high_performing = df.sort_values("objective", ascending=False)
                         elite_scores = np.array(high_performing.loc[:, "objective"])
 
-                        if np.array(elite_scores).max() >= self.env.unwrapped._prob.max_reward:
+                        if (
+                            np.array(elite_scores).max()
+                            >= self.env.unwrapped._prob.max_reward
+                        ):
                             break
 
                     # TODO: assuming an archive of one here! Make it more general, like above for generators
                     play_model = set_weights(
-                        self.play_model, self.play_archive.get_random_elite()[0], algo=ALGO
+                        self.play_model,
+                        self.play_archive.get_random_elite()[0],
+                        algo=ALGO,
                     )
 
             if itr % SAVE_INTERVAL == 0 or itr == 1:
                 # Save checkpoint during generator evo loop
                 self.save()
 
-#           if itr % VIS_INTERVAL == 0 or itr == 1:
-#               ckp_dir = os.path.join(SAVE_PATH, "checkpoint_{}".format(itr))
+            #           if itr % VIS_INTERVAL == 0 or itr == 1:
+            #               ckp_dir = os.path.join(SAVE_PATH, "checkpoint_{}".format(itr))
 
-#               if not os.path.isdir(ckp_dir):
-#                   os.mkdir(ckp_dir)
+            #               if not os.path.isdir(ckp_dir):
+            #                   os.mkdir(ckp_dir)
 
-#               if not CMAES:
-#                   # Otherwise the heatmap would just be a single cell
-#                   self.visualize(itr=itr)
-#               archive_objs = np.array(
-#                   self.gen_archive.as_pandas(include_solutions=False).loc[
-#                       :, "objective"
-#                   ]
-#               )
-#               save_train_stats(archive_objs, itr=itr)
+            #               if not CMAES:
+            #                   # Otherwise the heatmap would just be a single cell
+            #                   self.visualize(itr=itr)
+            #               archive_objs = np.array(
+            #                   self.gen_archive.as_pandas(include_solutions=False).loc[
+            #                       :, "objective"
+            #                   ]
+            #               )
+            #               save_train_stats(archive_objs, itr=itr)
 
             self.n_itr += 1
 
@@ -2063,46 +2223,46 @@ class EvoPCGRL:
         self.env = ConditionalWrapper(self.env)
         self.env.adjust_param(render=RENDER)
 
-#       if CMAES:
-#           # Give a little wiggle room from targets, to allow for some diversity (or not)
-#           if "binary" in PROBLEM:
-#               path_trg = self.env._prob.static_trgs["path-length"]
-#               self.env._prob.static_trgs.update(
-#                   {"path-length": (path_trg - 20, path_trg)}
-#               )
-#           elif "zelda" in PROBLEM:
-#               path_trg = self.env._prob.static_trgs["path-length"]
-#               self.env._prob.static_trgs.update(
-#                   {"path-length": (path_trg - 40, path_trg)}
-#               )
-#           elif "sokoban" in PROBLEM:
-#               sol_trg = self.env._prob.static_trgs["sol-length"]
-#               self.env._prob.static_trgs.update(
-#                   {"sol-length": (sol_trg - 10, sol_trg)}
-#               )
-#           elif "smb" in PROBLEM:
-#               pass
-#           elif "microstructure" in PROBLEM:
-#               pass
-#           else:
-#               raise NotImplementedError
+        #       if CMAES:
+        #           # Give a little wiggle room from targets, to allow for some diversity (or not)
+        #           if "binary" in PROBLEM:
+        #               path_trg = self.env._prob.static_trgs["path-length"]
+        #               self.env._prob.static_trgs.update(
+        #                   {"path-length": (path_trg - 20, path_trg)}
+        #               )
+        #           elif "zelda" in PROBLEM:
+        #               path_trg = self.env._prob.static_trgs["path-length"]
+        #               self.env._prob.static_trgs.update(
+        #                   {"path-length": (path_trg - 40, path_trg)}
+        #               )
+        #           elif "sokoban" in PROBLEM:
+        #               sol_trg = self.env._prob.static_trgs["sol-length"]
+        #               self.env._prob.static_trgs.update(
+        #                   {"sol-length": (sol_trg - 10, sol_trg)}
+        #               )
+        #           elif "smb" in PROBLEM:
+        #               pass
+        #           elif "microstructure" in PROBLEM:
+        #               pass
+        #           else:
+        #               raise NotImplementedError
 
         global N_DIRS
 
         if hasattr(self.env.unwrapped._rep, "_dirs"):
-        # if hasattr(self.env.unwrapped._rep, "_dirs"):
+            # if hasattr(self.env.unwrapped._rep, "_dirs"):
             N_DIRS = len(self.env.unwrapped._rep._dirs)
         else:
             N_DIRS = 0
 
         global N_STEPS
         global CONTINUOUS
-        CONTINUOUS = PROBLEM == 'face_ctrl'
+        CONTINUOUS = PROBLEM == "face_ctrl"
 
         #       if N_STEPS is None:
         #       if REPRESENTATION != "cellular":
         max_ca_steps = args.n_steps
-        
+
         max_changes = self.env.unwrapped._prob._height * self.env.unwrapped._prob._width
         if ENV3D:
             max_changes *= self.env.unwrapped._prob._length
@@ -2110,7 +2270,6 @@ class EvoPCGRL:
         reps_to_steps = {
             "cellular": max_ca_steps,
             "cellular3D": max_ca_steps,
-
             "wide": max_changes,
             #           "narrow": max_changes,
             "narrow": max_changes,
@@ -2133,9 +2292,14 @@ class EvoPCGRL:
         #       grid_archive_heatmap(archive, vmin=vmin, vmax=vmax)
         if ALGO == "ME":
             obj_min, obj_max = archive.fitness_extrema[0]
-            qdpy_plots.plotGridSubplots(archive.quality_array[..., 0], os.path.join(SAVE_PATH, 'fitness.pdf'),
-                                        plt.get_cmap("inferno_r"), archive.features_domain,
-                                        archive.fitness_domain[0], nbTicks=None)
+            qdpy_plots.plotGridSubplots(
+                archive.quality_array[..., 0],
+                os.path.join(SAVE_PATH, "fitness.pdf"),
+                plt.get_cmap("inferno_r"),
+                archive.features_domain,
+                archive.fitness_domain[0],
+                nbTicks=None,
+            )
         else:
             plt.figure(figsize=(8, 6))
             df_obj = archive.as_pandas()["objective"]
@@ -2145,7 +2309,7 @@ class EvoPCGRL:
             vmax = np.ceil(obj_max)
             grid_archive_heatmap(archive, vmin=vmin, vmax=vmax)
             label_fontdict = {
-                'fontsize': 16,
+                "fontsize": 16,
             }
             if not CMAES:
                 plt.xlabel(self.bc_names[0], fontdict=label_fontdict)
@@ -2154,19 +2318,19 @@ class EvoPCGRL:
                 save_path = os.path.join(SAVE_PATH, "checkpoint_{}".format(itr))
             else:
                 save_path = SAVE_PATH
-            plt.title('fitness', fontdict={'fontsize': 24})
+            plt.title("fitness", fontdict={"fontsize": 24})
             plt.tight_layout()
             plt.savefig(os.path.join(save_path, "fitness.png"))
             #       plt.gca().invert_yaxis()  # Makes more sense if larger BC_1's are on top.
-
 
             if SHOW_VIS:
                 plt.show()
             plt.close()
 
         # Print table of results
-#       df = archive.as_pandas()
-        # high_performing = df[df["objective"] > 200].sort_values("objective", ascending=False)
+
+    #       df = archive.as_pandas()
+    # high_performing = df[df["objective"] > 200].sort_values("objective", ascending=False)
 
     #       print(df)
 
@@ -2175,8 +2339,9 @@ class EvoPCGRL:
         self.init_env()
         archive = self.gen_archive
         if args.algo == "ME":
-            nonempty_idxs = np.stack(np.where(
-                np.isnan(archive.quality_array) == False), axis=1)
+            nonempty_idxs = np.stack(
+                np.where(np.isnan(archive.quality_array) == False), axis=1
+            )
             # Assume 2nd BC is a measure of complexity
             # Sort according to 2nd BC
             idxs = nonempty_idxs.tolist()
@@ -2213,10 +2378,16 @@ class EvoPCGRL:
                 figw, figh = 32, 4
             elif "zelda" in PROBLEM:
                 d = 3
-                figw, figh = self.env.unwrapped._prob._width, self.env.unwrapped._prob._height
+                figw, figh = (
+                    self.env.unwrapped._prob._width,
+                    self.env.unwrapped._prob._height,
+                )
             else:
                 d = 6  # number of rows and columns
-                figw, figh = self.env.unwrapped._prob._width, self.env.unwrapped._prob._height
+                figw, figh = (
+                    self.env.unwrapped._prob._width,
+                    self.env.unwrapped._prob._height,
+                )
 
             if CMAES:
                 n_rows = 2
@@ -2274,14 +2445,16 @@ class EvoPCGRL:
                         img = level_frames[-1]
                         axs[n_row, n_col].imshow(img, aspect=1)
                 if concat_gifs:
-                    save_level_frames(level_frames, 'concat')
+                    save_level_frames(level_frames, "concat")
 
             else:
                 fig, axs = plt.subplots(ncols=d, nrows=d, figsize=(figw, figh))
                 if ALGO == "ME":
                     pass
                 else:
-                    df_g = df.sort_values(by=["behavior_0", "behavior_1"], ascending=False)
+                    df_g = df.sort_values(
+                        by=["behavior_0", "behavior_1"], ascending=False
+                    )
 
                 df_g["row"] = np.floor(
                     np.linspace(0, d, len(df_g), endpoint=False)
@@ -2299,8 +2472,8 @@ class EvoPCGRL:
 
                     for col_num in range(len(row)):
                         model = grid_models[col_num]
-#                       axs[row_num, col_num].set_axis_off()
-                        axs[-col_num-1, -row_num-1].set_axis_off()
+                        #                       axs[row_num, col_num].set_axis_off()
+                        axs[-col_num - 1, -row_num - 1].set_axis_off()
 
                         # initialize weights
                         gen_model = set_weights(self.gen_model, model, algo=ALGO)
@@ -2324,15 +2497,17 @@ class EvoPCGRL:
                             render_levels=True,
                         )
                         if not concat_gifs:
-                            save_level_frames(level_frames_i, '{}_{}'.format(row_num, col_num))
+                            save_level_frames(
+                                level_frames_i, "{}_{}".format(row_num, col_num)
+                            )
                         level_frames += level_frames_i
                         # Get image
                         #                       img = self.env.render(mode="rgb_array")
                         img = level_frames[-1]
-#                       axs[row_num, col_num].imshow(img, aspect="auto")
-                        axs[-col_num-1, -row_num-1].imshow(img, aspect="auto")
+                        #                       axs[row_num, col_num].imshow(img, aspect="auto")
+                        axs[-col_num - 1, -row_num - 1].imshow(img, aspect="auto")
                 if concat_gifs:
-                    save_level_frames(level_frames, 'concat')
+                    save_level_frames(level_frames, "concat")
             fig.subplots_adjust(hspace=0.01, wspace=0.01)
             plt.tight_layout()
             fig.savefig(
@@ -2365,34 +2540,34 @@ class EvoPCGRL:
             # The level spaces which we will attempt to map to
             problem_eval_bc_names = {
                 "binary": [
-#                   ("regions", "path-length")
-                      ],
+                    #                   ("regions", "path-length")
+                ],
                 "zelda": [
-#                   ("nearest-enemy", "path-length"),
-#                   ("symmetry", "path-length"),
-#                   ("emptiness", "path-length"),
+                    #                   ("nearest-enemy", "path-length"),
+                    #                   ("symmetry", "path-length"),
+                    #                   ("emptiness", "path-length"),
                 ],
                 "sokoban": [
-#                   ("crate", "sol-length")
+                    #                   ("crate", "sol-length")
                 ],
                 "smb": [
-#                   ("emptiness", "jumps")
+                    #                   ("emptiness", "jumps")
                 ],
                 "loderunner": [
-#                   ("emptiness", "path-length"),
-#                   ("symmetry", "path-length"),
+                    #                   ("emptiness", "path-length"),
+                    #                   ("symmetry", "path-length"),
                 ],
                 "face": [
                     ("brightness", "entropy"),
                 ],
-                "microstructure": []
+                "microstructure": [],
             }
 
-#           for k in problem_eval_bc_names.keys():
-#               problem_eval_bc_names[k] += [
-#                   # ("NONE"),
-#                   ("emptiness", "symmetry")
-#               ]
+            #           for k in problem_eval_bc_names.keys():
+            #               problem_eval_bc_names[k] += [
+            #                   # ("NONE"),
+            #                   ("emptiness", "symmetry")
+            #               ]
 
             eval_bc_names = []
             for (k, v) in problem_eval_bc_names.items():
@@ -2436,9 +2611,15 @@ class EvoPCGRL:
             # Borrowing logic from grid_archive_heatmap from pyribs.
 
             # Retrieve data from archive
-            if ALGO == 'ME':
-                lower_bounds = [archive.features_domain[i][0] for i in range(len(archive.features_domain))]
-                upper_bounds = [archive.features_domain[i][1] for i in range(len(archive.features_domain))]
+            if ALGO == "ME":
+                lower_bounds = [
+                    archive.features_domain[i][0]
+                    for i in range(len(archive.features_domain))
+                ]
+                upper_bounds = [
+                    archive.features_domain[i][1]
+                    for i in range(len(archive.features_domain))
+                ]
                 x_dim, y_dim = archive.shape
             else:
                 lower_bounds = archive.lower_bounds
@@ -2486,8 +2667,7 @@ class EvoPCGRL:
                     reliability_scores[id_0, id_1] = variance_penalty
 
             def save_levels(level_json, overwrite=False, headers=False):
-                df = pd.DataFrame.from_dict(level_json
-                                  )
+                df = pd.DataFrame.from_dict(level_json)
                 #               df = df[df['targets'] == 0]
 
                 if overwrite:
@@ -2520,7 +2700,7 @@ class EvoPCGRL:
                 if CMAES:
                     N_EVAL_STATES = N_INIT_STATES = 100
                 else:
-                    N_EVAL_STATES = N_INIT_STATES = 20  #= 100  # e.g. 10
+                    N_EVAL_STATES = N_INIT_STATES = 20  # = 100  # e.g. 10
 
                 init_states = gen_latent_seeds(N_INIT_STATES, self.env)
             #               init_states = np.random.randint(
@@ -2564,11 +2744,16 @@ class EvoPCGRL:
 
                 for result in results:
 
-                    level_json, batch_reward, final_bcs, (
-                        time_penalty,
-                        batch_targets_penalty,
-                        variance_penalty,
-                        diversity_bonus,
+                    (
+                        level_json,
+                        batch_reward,
+                        final_bcs,
+                        (
+                            time_penalty,
+                            batch_targets_penalty,
+                            variance_penalty,
+                            diversity_bonus,
+                        ),
                     ) = result
                     # id_0 = idxs_0[i]
                     # id_1 = idxs_1[i]
@@ -2576,15 +2761,18 @@ class EvoPCGRL:
                     # TODO: remove this (it's for backward compatibility) since we've implemented get_index for qdpy
                     #   grid
                     if ALGO == "ME":
-                        # Clip features to within the feature domain (shouldn't be outside of this domain in theory 
+                        # Clip features to within the feature domain (shouldn't be outside of this domain in theory
                         # though).
-                        grid_bcs = [np.clip(bc, *archive.features_domain[i]) for i, bc in enumerate(grid_bcs)]
+                        grid_bcs = [
+                            np.clip(bc, *archive.features_domain[i])
+                            for i, bc in enumerate(grid_bcs)
+                        ]
                         id_0, id_1 = archive.index_grid(tuple(grid_bcs))
                     else:
                         id_0, id_1 = archive.get_index(np.array(grid_bcs))
 
                     if SAVE_LEVELS:
-                        save_levels(level_json, overwrite=i == 0, headers=i==0)
+                        save_levels(level_json, overwrite=i == 0, headers=i == 0)
                     # Record directly from evolved archive since we are guaranteed to have only one elite per cell
                     record_scores(
                         id_0,
@@ -2604,14 +2792,21 @@ class EvoPCGRL:
                             # Record componentes of the fitness for each cell in each evaluation archive
                             # NOTE: assume 2 BCs per eval archive
                             eval_bcs = np.array(
-#                               final_bcs[n_train_bcs + 2 * j : n_train_bcs + 2 * j + 2]
-                                final_bcs[2 * j: 2 * (j + 1)]
+                                #                               final_bcs[n_train_bcs + 2 * j : n_train_bcs + 2 * j + 2]
+                                final_bcs[2 * j : 2 * (j + 1)]
                             )
                             if ALGO == "ME":
-                                eval_bcs = [np.clip(bc, *archive.features_domain[i]) for i, bc in enumerate(eval_bcs)]
+                                eval_bcs = [
+                                    np.clip(bc, *archive.features_domain[i])
+                                    for i, bc in enumerate(eval_bcs)
+                                ]
                                 id_0, id_1 = archive.index_grid(tuple(eval_bcs))
                                 # Dummy individual
-                                individual = Individual(type(self.gen_model), self.n_tile_types, self.n_tile_types)
+                                individual = Individual(
+                                    type(self.gen_model),
+                                    self.n_tile_types,
+                                    self.n_tile_types,
+                                )
                                 individual.fitness = Fitness([batch_reward])
                                 individual.features = Features(final_bcs)
                                 idx = eval_archive.add(individual)
@@ -2663,11 +2858,16 @@ class EvoPCGRL:
                         )
 
                     gen_model = set_weights(self.gen_model, model, algo=ALGO)
-                    level_json, batch_reward, final_bcs, (
-                        time_penalty,
-                        targets_penalty,
-                        variance_penalty,
-                        diversity_bonus,
+                    (
+                        level_json,
+                        batch_reward,
+                        final_bcs,
+                        (
+                            time_penalty,
+                            targets_penalty,
+                            variance_penalty,
+                            diversity_bonus,
+                        ),
                     ) = simulate(
                         env=self.env,
                         model=gen_model,
@@ -2719,41 +2919,74 @@ class EvoPCGRL:
 
             if not CMAES:
                 plot_args = {
-                    'lower_bounds': lower_bounds,
-                    'upper_bounds': upper_bounds,
-                    'x_bounds': x_bounds,
-                    'y_bounds': y_bounds,
+                    "lower_bounds": lower_bounds,
+                    "upper_bounds": upper_bounds,
+                    "x_bounds": x_bounds,
+                    "y_bounds": y_bounds,
                 }
-                plot_score_heatmap(playability_scores, "playability", self.bc_names, **plot_args,
-                                   bcs_in_filename=False)
-                plot_score_heatmap(diversity_scores / 10, "diversity", self.bc_names, **plot_args, bcs_in_filename=False)
-                plot_score_heatmap(reliability_scores, "reliability", self.bc_names, **plot_args, bcs_in_filename=False)
-                plot_score_heatmap(fitness_scores, "fitness_eval", self.bc_names, **plot_args, bcs_in_filename=False)
+                plot_score_heatmap(
+                    playability_scores,
+                    "playability",
+                    self.bc_names,
+                    **plot_args,
+                    bcs_in_filename=False,
+                )
+                plot_score_heatmap(
+                    diversity_scores / 10,
+                    "diversity",
+                    self.bc_names,
+                    **plot_args,
+                    bcs_in_filename=False,
+                )
+                plot_score_heatmap(
+                    reliability_scores,
+                    "reliability",
+                    self.bc_names,
+                    **plot_args,
+                    bcs_in_filename=False,
+                )
+                plot_score_heatmap(
+                    fitness_scores,
+                    "fitness_eval",
+                    self.bc_names,
+                    **plot_args,
+                    bcs_in_filename=False,
+                )
 
                 for j, eval_archive in enumerate(eval_archives):
                     bc_names = eval_bc_names[j]
 
                     if bc_names != ("NONE") and bc_names != tuple(self.bc_names):
                         plot_score_heatmap(
-                            eval_playability_scores[j], "playability", bc_names, **plot_args,
+                            eval_playability_scores[j],
+                            "playability",
+                            bc_names,
+                            **plot_args,
                         )
                         plot_score_heatmap(
-                            eval_diversity_scores[j] / 10, "diversity", bc_names, **plot_args,
+                            eval_diversity_scores[j] / 10,
+                            "diversity",
+                            bc_names,
+                            **plot_args,
                         )
                         plot_score_heatmap(
-                            eval_reliability_scores[j], "reliability", bc_names, **plot_args,
+                            eval_reliability_scores[j],
+                            "reliability",
+                            bc_names,
+                            **plot_args,
                         )
                         plot_score_heatmap(
-                            eval_fitness_scores[j], "fitness_eval", bc_names, **plot_args,
+                            eval_fitness_scores[j],
+                            "fitness_eval",
+                            bc_names,
+                            **plot_args,
                         )
 
                     if bc_names == tuple(self.bc_names):
                         # in case a bug appears here, where performance differs from training to inference,
                         # include this redundant data to try and pinpoint it. Note that this is only redundant in
                         # stats_fixLvls, though, because otherwise, we are doing evaluation in the same BC space.
-                        pct_archive_full = (
-                            n_filled_bins / n_total_bins
-                        )
+                        pct_archive_full = n_filled_bins / n_total_bins
 
                         if not RANDOM_INIT_LEVELS:
                             # then this will be the same as the
@@ -2765,23 +2998,28 @@ class EvoPCGRL:
                         stats["% elites maintained"] = (
                             pct_archive_full / stats["% train archive full"]
                         )
-                        stats["% QD score maintained"] = stats["eval QD score"] / stats["QD score"]
+                        stats["% QD score maintained"] = (
+                            stats["eval QD score"] / stats["QD score"]
+                        )
 
                         stats["% fresh train archive full"] = pct_archive_full
                         stats["% fresh train archive full"] = pct_archive_full
                     n_occupied = n_filled_bins
-#                   assert n_occupied == len(eval_archive._occupied_indices)
+                    #                   assert n_occupied == len(eval_archive._occupied_indices)
                     bcs_key = "-".join(bc_names)
                     stats["% eval archives full"].update(
                         {
                             bcs_key: n_occupied / n_total_bins,
-                    })
-                    stats["eval archive sizes"].update({
-                        bcs_key: n_occupied,
-                    })
-                    stats["eval QD scores"].update({
-                        bcs_key: get_qd_score(eval_archive, self.env, bc_names)
-                    })
+                        }
+                    )
+                    stats["eval archive sizes"].update(
+                        {
+                            bcs_key: n_occupied,
+                        }
+                    )
+                    stats["eval QD scores"].update(
+                        {bcs_key: get_qd_score(eval_archive, self.env, bc_names)}
+                    )
 
             stats.update(
                 {
@@ -2817,11 +3055,16 @@ class EvoPCGRL:
                 init_states = get_init_states(init_states_archive, tuple(idxs[i]))
             else:
                 init_states = self.init_states
-            _, _, _, (
-                time_penalty,
-                targets_penalty,
-                variance_penalty,
-                diversity_bonus,
+            (
+                _,
+                _,
+                _,
+                (
+                    time_penalty,
+                    targets_penalty,
+                    variance_penalty,
+                    diversity_bonus,
+                ),
             ) = simulate(
                 self.env,
                 gen_model,
@@ -2845,7 +3088,11 @@ class EvoPCGRL:
 
 def gen_latent_seeds(n_init_states, env):
     if ENV3D:
-        im_dims = (env.unwrapped._prob._height, env.unwrapped._prob._width, env.unwrapped._prob._length)
+        im_dims = (
+            env.unwrapped._prob._height,
+            env.unwrapped._prob._width,
+            env.unwrapped._prob._length,
+        )
     else:
         im_dims = (env.unwrapped._prob._height, env.unwrapped._prob._width)
     if env.unwrapped._prob.is_continuous():  # AD HOC continous representation
@@ -2855,13 +3102,18 @@ def gen_latent_seeds(n_init_states, env):
         if "CPPN2" in MODEL:
             init_states = np.tile(init_states[:, :, None, None], (1, 1, *im_dims))
         if "Decoder" in MODEL:
-            assert env.unwrapped._prob._width % 4 == env.unwrapped._prob._height % 4 == 0
-            init_states = np.tile(init_states[:, :, None, None], (1, 1, *tuple(np.array(im_dims) // 4)))
+            assert (
+                env.unwrapped._prob._width % 4 == env.unwrapped._prob._height % 4 == 0
+            )
+            init_states = np.tile(
+                init_states[:, :, None, None], (1, 1, *tuple(np.array(im_dims) // 4))
+            )
     else:
         init_states = np.random.randint(
             0, len(env.unwrapped._prob.get_tile_types()), (N_INIT_STATES, *im_dims)
         )
     return init_states
+
 
 #   init_states = np.zeros(shape=(n_init_states, env.unwrapped._prob._height, env.unwrapped._prob._width))
 #   init_state_maps = []
@@ -2919,7 +3171,7 @@ if __name__ == "__main__":
     global seed
 
     CONCAT_GIFS = False
-    if arg_dict["exp_name"] == '5':
+    if arg_dict["exp_name"] == "5":
         seed = 420
     else:
         try:
@@ -2978,7 +3230,9 @@ if __name__ == "__main__":
 
     if "CPPN" in MODEL:
         if MODEL != "CPPNCA" and "Gen" not in MODEL:
-            assert N_INIT_STATES == 0 and not RANDOM_INIT_LEVELS and not REEVALUATE_ELITES
+            assert (
+                N_INIT_STATES == 0 and not RANDOM_INIT_LEVELS and not REEVALUATE_ELITES
+            )
         if MODEL != "CPPNCA":
             assert N_STEPS == 1
     if ("Decoder" in MODEL) or ("CPPN2" in MODEL):
@@ -2990,7 +3244,7 @@ if __name__ == "__main__":
     #   exp_name = "EvoPCGRL_{}-{}_{}_{}_{}-batch".format(
     #       PROBLEM, REPRESENTATION, MODEL, BCS, N_INIT_STATES
     #   )
-    exp_name = 'EvoPCGRL_'
+    exp_name = "EvoPCGRL_"
     if ALGO == "ME":
         exp_name += "ME_"
     exp_name += "{}-{}_{}_{}_{}-batch_{}-pass".format(
@@ -3012,13 +3266,13 @@ if __name__ == "__main__":
     SAVE_PATH = os.path.join("evo_runs", exp_name)
     if MODEL not in preprocess_action_funcs:
         if "CPPN" in MODEL:
-            preprocess_action = preprocess_action_funcs['CPPN'][REPRESENTATION]
+            preprocess_action = preprocess_action_funcs["CPPN"][REPRESENTATION]
         else:
-            preprocess_action = preprocess_action_funcs['NCA'][REPRESENTATION]
+            preprocess_action = preprocess_action_funcs["NCA"][REPRESENTATION]
     else:
         preprocess_action = preprocess_action_funcs[MODEL][REPRESENTATION]
     if MODEL not in preprocess_observation_funcs:
-        preprocess_observation = preprocess_observation_funcs['NCA'][REPRESENTATION]
+        preprocess_observation = preprocess_observation_funcs["NCA"][REPRESENTATION]
     else:
         preprocess_observation = preprocess_observation_funcs[MODEL][REPRESENTATION]
 
@@ -3030,7 +3284,6 @@ if __name__ == "__main__":
         writer = SummaryWriter(LOG_NAME)
 
         return writer
-
 
     if THREADS:
         ray.init()
