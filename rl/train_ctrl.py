@@ -50,7 +50,8 @@ def main(cfg):
     exp_name_id = f'{exp_name}_{cfg.experiment_id}'
     log_dir = f'rl_runs/{exp_name_id}_log'
 
-    if not cfg.load:
+    print(cfg)
+    if not cfg.load_args:
 
         if not cfg.overwrite:
             if os.path.isdir(log_dir):
@@ -92,7 +93,7 @@ def main(cfg):
         'num_workers': num_workers,
         'num_gpus': 0,
         'env_config': vars(cfg),  # Maybe env should get its own config? (A subset of the original?)
-        'num_envs_per_worker': 10 if not cfg.infer else 1,
+        'num_envs_per_worker': 10,
         'render_env': cfg.render,
         'model': {
             'custom_model': 'feedforward',
