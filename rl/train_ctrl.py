@@ -1,4 +1,3 @@
-
 import json
 import os
 from pathlib import Path
@@ -10,22 +9,22 @@ import gym
 import numpy as np
 
 import gym_pcgrl
-from models import CustomFeedForwardModel, CustomFeedForwardModel3D, WideModel3D, WideModel3DSkip # noqa : F401
+from models import CustomFeedForwardModel, CustomFeedForwardModel3D, WideModel3D, WideModel3DSkip  # noqa : F401
 from args import parse_args
 from envs import make_env
-#from stable_baselines3.common.policies import ActorCriticCnnPolicy
-#from model import CustomPolicyBigMap, CApolicy, WidePolicy
-#from model import (CustomPolicyBigMap, CustomPolicySmallMap,
+# from stable_baselines3.common.policies import ActorCriticCnnPolicy
+# from model import CustomPolicyBigMap, CApolicy, WidePolicy
+# from model import (CustomPolicyBigMap, CustomPolicySmallMap,
 #                   FullyConvPolicyBigMap, FullyConvPolicySmallMap, CAPolicy)
 from ray.rllib.agents import ppo
 from ray.rllib.models import ModelCatalog
 from ray.tune.registry import register_env
 from ray.tune.logger import pretty_print
-#from stable_baselines3.common.results_plotter import load_results, ts2xy
+# from stable_baselines3.common.results_plotter import load_results, ts2xy
 # from stable_baselines.results_plotter import load_results, ts2xy
 # import tensorflow as tf
 from utils import (get_env_name, get_exp_name, get_map_width,
-#                  max_exp_idx
+    #                  max_exp_idx
                    )
 
 n_steps = 0
@@ -35,7 +34,7 @@ best_mean_reward, n_steps = -np.inf, 0
 
 def main(cfg):
     if (cfg.problem not in ["binary_ctrl", "sokoban_ctrl", "zelda_ctrl", "smb_ctrl", "MicropolisEnv", "RCT"]) and \
-        ("minecraft" not in cfg.problem):
+            ("minecraft" not in cfg.problem):
         raise Exception(
             "Not a controllable environment. Maybe add '_ctrl' to the end of the name? E.g. 'sokoban_ctrl'")
 
@@ -56,7 +55,7 @@ def main(cfg):
             # New experiment
             if os.path.isdir(log_dir):
                 raise Exception(f"Log directory rl_runs/{exp_name_id} exists. Please delete it first (or use command "
-                "line argument `--load` to load experiment, or `--overwrite` to overwrite it).")
+                                "line argument `--load` to load experiment, or `--overwrite` to overwrite it).")
 
             # Create the log directory if training from scratch.
             os.mkdir(log_dir)
@@ -107,12 +106,12 @@ def main(cfg):
             # for using ~/ray_results/...).
             "logdir": log_dir,
         },
-#       "exploration_config": {
-#           "type": "Curiosity",
-#       }
-#       "log_level": "INFO",
-#       "train_batch_size": 32,
-#       "sgd_minibatch_size": 32,
+        #       "exploration_config": {
+        #           "type": "Curiosity",
+        #       }
+        #       "log_level": "INFO",
+        #       "train_batch_size": 32,
+        #       "sgd_minibatch_size": 32,
     }
 
     register_env('pcgrl', make_env)
@@ -130,13 +129,16 @@ def main(cfg):
     # Super ad-hoc re-loading. Note that we reset the number of training steps to be executed. Need to clearn this up if
     # we were to use it in actual publication-worthy experiments. Good for debugging though, maybe.
     if cfg.load:
-        with open(checkpoint_path_file, 'r') as f:
-            checkpoint_path = f.read()
+        try:
+            with open(checkpoint_path_file, 'r') as f:
+                checkpoint_path = f.read()
 
-        # TODO: are we failing to save/load certain optimizer states? For example, the kl coefficient seems to shoot
-        #  back up when reloading (see tensorboard logs).
-        trainer.load_checkpoint(checkpoint_path=checkpoint_path)
-        print(f"Loaded checkpoint from {checkpoint_path}.")
+                # TODO: are we failing to save/load certain optimizer states? For example, the kl coefficient seems
+                #  to shoot back up when reloading (see tensorboard logs).
+                trainer.load_checkpoint(checkpoint_path=checkpoint_path)
+                print(f"Loaded checkpoint from {checkpoint_path}.")
+        except Exception as e:
+            print(e)
 
     n_params = 0
     param_dict = trainer.get_weights()['default_policy']
@@ -190,12 +192,13 @@ def main(cfg):
 
                 # FIXME: sometimes this does not exist (when overwriting?)
                 shutil.rmtree(Path(old_checkpoint).parent)
-            
+
             # Record the path of the new checkpoint.
             with open(checkpoint_path_file, 'w') as f:
                 f.write(checkpoint)
 
             print("checkpoint saved at", checkpoint)
+
 
 # tune.run(trainable, num_samples=2, local_dir="./results", name="test_experiment")
 
@@ -206,7 +209,6 @@ cfg = parse_args()
 cfg.evaluate = False  # TODO: implement evaluation
 cfg.ca_actions = False  # Not using NCA-type actions.
 cfg.logging = True  # Always log
-
 
 # NOTE: change percentage currently has no effect! Be warned!! (We fix number of steps for now.)
 

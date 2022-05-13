@@ -9,9 +9,9 @@
 #SBATCH --job-name=pcgrl_3D
 #SBATCH --mail-type=BEGIN,END
 #SBATCH --mail-user=zj2086@nyu.edu
-#SBATCH --output=rl_runs/pcgrl_minecraft_3D_maze_ctrl_narrow3D_vanilla_chng-1.0_testLrGamma_%j.out
+#SBATCH --output=rl_runs/pcgrl_binary_ctrl_narrow_vanilla_chng-1.0_0_%j.out
 
-cd /scratch/zj2086/control-pcgrl
+#cd /scratch/zj2086/control-pcgrl
 
 ## Is this actually necessary?
 ## ZJ: I don't think so? Calling conda activate <env_name> twice will throw an warning (but won't crash)
@@ -21,7 +21,7 @@ cd /scratch/zj2086/control-pcgrl
 ## conda activate pcgrl
 
 start=$SECONDS
-python rl/train_ctrl.py --load_args minecraft_3D_maze_ctrl_narrow3D_vanilla_chng-1.0_testLrGamma
+python rl/train_ctrl.py --load_args binary_ctrl_narrow_vanilla_chng-1.0_0
 do
     duration=$((( SECONDS - start ) / 60))
     echo "Script returned error after $duration minutes"
